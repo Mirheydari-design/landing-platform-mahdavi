@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ساعت 313 - زندگی امام زمانی داشته باش</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Hero Section with Parallax -->
+    <section id="hero" class="hero">
+        <div class="parallax-bg"></div>
+        <div class="hero-content">
+            <div class="floating-elements">
+                <div class="floating-star" style="--delay: 0s"></div>
+                <div class="floating-star" style="--delay: 2s"></div>
+                <div class="floating-star" style="--delay: 4s"></div>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-line">ساعت ۳۱۳</span>
+                <span class="title-subtitle">نسخه ویژه کاربران اولیه</span>
+            </h1>
+            <p class="hero-description">
+                با هوش مصنوعی چت کن، زندگی روزمره‌ت رو تغییر بده
+                <br>
+                و یه زندگی امام زمانی داشته باش ✨
+            </p>
+            <div class="cta-buttons">
+                <button class="cta-primary" onclick="scrollToSection('feedback')">
+                    الان شروع کن
+                </button>
+                <button class="cta-secondary" onclick="scrollToSection('features')">
+                    بیشتر بدون
+                </button>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title scroll-reveal">چی توی ساعت ۳۱۳ میتونی انجام بدی؟</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card scroll-reveal" style="--delay: 0.1s">
+                    <div class="feature-icon">🤖</div>
+                    <h3>چت با هوش مصنوعی</h3>
+                    <p>با یک هوش مصنوعی حرف بزن که زندگی روزمره‌ت رو بهتر میکنه و معرفتت رو زیاد میکنه</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" style="--delay: 0.2s">
+                    <div class="feature-icon">✨</div>
+                    <h3>کارت‌های زیبای نیت</h3>
+                    <p>نیت‌های ارتقایافته‌ت رو در قالب کارت‌های خفن با تصویر به اشتراک بذار</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" style="--delay: 0.3s">
+                    <div class="feature-icon">💬</div>
+                    <h3>کامنت‌گذاری هوشمند</h3>
+                    <p>حتی بات‌های کامنت‌گذار هم هستن که برای افزایش معرفت کمکت میکنن</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 313 Revelation Experience Section -->
+    <section id="revelation-313" class="revelation-section">
+        <div class="galaxy-background">
+            <div class="stars"></div>
+            <div class="galaxy-spiral"></div>
+        </div>
+        
+        <div class="revelation-content" id="revelationContent">
+            <h1 class="revelation-title">اسمت، نقطه شروع یه زندگی فوق‌العاده‌ست!
+
+</h1>
+            
+            <form class="revelation-form" id="revelationForm">
+                <input type="text" id="userName313" placeholder="اسم کوچیکت رو بنویس..." class="name-input" required>
+                <button type="submit" class="launch-button">مسیرم رو نشونم بده</button>
+                <p class="form-subtext" id="formSubtext"></p>
+            </form>
+        </div>
+        
+        <div class="revelation-result" id="revelationResult" style="display: none;">
+            <div class="name-particles" id="nameParticles"></div>
+            <div class="mystical-bubble" id="mysticalBubble">
+                <div class="mystical-message-container">
+                    <div class="mystical-message" id="mysticalMessage"></div>
+                </div>
+            </div>
+            <button class="final-cta glass-ui" id="finalCta"></button>
+            <p class="form-subtext" id="finalCtaSubtext"></p>
+        </div>
+    </section>
+
+    
+
+    <!-- Feedback Section -->
+    <section id="feedback" class="feedback">
+        <div class="container">
+            <h2 class="section-title scroll-reveal">اسم پلتفرم رو انتخاب کن</h2>
+            <p class="section-subtitle scroll-reveal">یکی از گزینه‌ها را رای بده یا گزینه جدید اضافه کن</p>
+
+            <div class="vote-list scroll-reveal" id="voteList">
+                <!-- SSR fallback items with name + tagline -->
+                <button class="vote-item" data-key="نور هدایت">
+                    <div>
+                        <div class="item-title">نور هدایت</div>
+                        <div class="item-subtitle">راهی روشن برای دل‌ها</div>
+                    </div>
+                    <span class="item-meta">
+                        <span class="count-badge" data-count>۰</span>
+                        <span class="icon-outline" aria-hidden>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+                        </span>
+                    </span>
+                </button>
+                <button class="vote-item" data-key="راه انتظار">
+                    <div>
+                        <div class="item-title">راه انتظار</div>
+                        <div class="item-subtitle">صبر فعال برای فردای بهتر</div>
+                    </div>
+                    <span class="item-meta">
+                        <span class="count-badge" data-count>۰</span>
+                        <span class="icon-outline" aria-hidden>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+                        </span>
+                    </span>
+                </button>
+                <button class="vote-item" data-key="همراه مهدی">
+                    <div>
+                        <div class="item-title">همراه مهدی</div>
+                        <div class="item-subtitle">گامی کنار یاران خوبی</div>
+                    </div>
+                    <span class="item-meta">
+                        <span class="count-badge" data-count>۰</span>
+                        <span class="icon-outline" aria-hidden>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+                        </span>
+                    </span>
+                </button>
+                <button class="vote-item" data-key="نسیم ظهور">
+                    <div>
+                        <div class="item-title">نسیم ظهور</div>
+                        <div class="item-subtitle">طراوت امید در زندگی</div>
+                    </div>
+                    <span class="item-meta">
+                        <span class="count-badge" data-count>۰</span>
+                        <span class="icon-outline" aria-hidden>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+                        </span>
+                    </span>
+                </button>
+
+                <!-- Add new option button styled like items -->
+                <button class="vote-item add-new" id="openAddOption">
+                    <div>
+                        <div class="item-title">گزینه پیشنهادی جدید</div>
+                        <div class="item-subtitle">نام و تگ‌لاین خودت رو ثبت کن</div>
+                    </div>
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Minimal Modal for new option -->
+    <div class="modal" id="addOptionModal" aria-hidden="true" style="display:none;">
+        <div class="modal-backdrop" data-close></div>
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <h3 class="modal-title">افزودن گزینه جدید</h3>
+            <div class="modal-row">
+                <input type="text" id="newOptionName" class="modal-input" placeholder="اسم پیشنهادی">
+            </div>
+            <div class="modal-row">
+                <input type="text" id="newOptionTagline" class="modal-input" placeholder="تگ‌لاین (اختیاری)">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" data-close>انصراف</button>
+                <button class="modal-btn primary" id="submitNewOption">افزودن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Request Section -->
+    <section id="feature-requests" class="feature-requests">
+        <div class="container">
+            <div class="feature-request-content scroll-reveal">
+                <h2>ایده‌هات رو با ما در میون بذار</h2>
+                <p>چه ویژگی جدیدی میخوای به پلتفرم اضافه بشه؟</p>
+                
+                <div class="feature-card-container">
+                    <div class="feature-image">
+                        <img src="images/feature-card-bg.jpg" alt="تصویر پیشنهادات" />
+                    </div>
+                    <a href="https://313time.featurebase.app/" target="_blank" class="feature-link-card">
+                        <div class="card-overlay"></div>
+                        <div class="card-content">
+                            <div class="card-icon">💡</div>
+                            <h3>صفحه پیشنهادات</h3>
+                            <p>ایده‌هات رو ثبت کن و از پیشرفت توسعه پلتفرم باخبر باش</p>
+                            <div class="card-action">
+                                <span class="action-text">برو به صفحه پیشنهادات</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>ساعت ۳۱۳</h3>
+                    <p>زندگی امام زمانی داشته باش</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#hero">خانه</a>
+                    <a href="#features">ویژگی‌ها</a>
+                    <a href="#feedback">نظرات</a>
+                    <a href="https://313time.featurebase.app/" target="_blank">پیشنهادات</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© ۱۴۰۳ ساعت ۳۱۳ - تمام حقوق محفوظ است</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/tweakpane@4.0.3/dist/tweakpane.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
