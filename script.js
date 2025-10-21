@@ -6,6 +6,7 @@ const $$ = s => d.querySelectorAll(s);
 const API_BASE    = location.origin;
 const API_VOTE    = `${API_BASE}/api/vote`;
 const API_OPTIONS = `${API_BASE}/api/options`;
+const API_PROPOSE = `${API_BASE}/api/propose`;
 
 const faNum = s => String(s).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 const fromFaNum = s => Number(String(s).replace(/[۰-۹]/g, ch => {
@@ -54,15 +55,15 @@ function render({options, counts, error}){
     const e = d.createElement('div');
     e.className = 'error-message';
     e.innerHTML = `<div style="text-align:center;padding:2rem;color:#ff6b6b;background:rgba(255,107,107,.1);border-radius:12px;border:1px solid rgba(255,107,107,.3);">
-        <h3 style="margin-bottom:1rem;font-size:1.2rem;">⚠️ خطا در اتصال به سرور</h3>
-        <p style="margin-bottom:.5rem;font-size:.9rem;">نمی‌توانیم گزینه‌ها را از دیتابیس لود کنیم</p>
-        <button onclick="location.reload()" style="margin-top:1rem;padding:.5rem 1rem;background:rgba(255,107,107,.2);border:1px solid rgba(255,107,107,.4);border-radius:8px;color:#ff6b6b;cursor:pointer;">تلاش مجدد</button>
+      <h3 style="margin-bottom:1rem;font-size:1.2rem;">⚠️ خطا در اتصال به سرور</h3>
+      <p style="margin-bottom:.5rem;font-size:.9rem;">نمی‌توانیم گزینه‌ها را از دیتابیس لود کنیم</p>
+      <button onclick="location.reload()" style="margin-top:1rem;padding:.5rem 1rem;background:rgba(255,107,107,.2);border:1px solid rgba(255,107,107,.4);border-radius:8px;color:#ff6b6b;cursor:pointer;">تلاش مجدد</button>
     </div>`;
     voteListEl.appendChild(e);
     return;
   }
 
-  // آیتم‌های گزینه‌ها
+  // گزینه‌ها به همان ترتیبی که سرور می‌فرستد (rowid ASC) رندر می‌شوند
   options.forEach(o=>{
     const btn = d.createElement('button');
     btn.className = 'vote-item';
@@ -82,10 +83,10 @@ function render({options, counts, error}){
   });
 
   // دکمه افزودن همیشه آخر لیست
-    const add = d.createElement('button');
-    add.id='openAddOption'; add.className='vote-item add-new';
-    add.innerHTML = `<div><div class="item-title">گزینه پیشنهادی جدید</div><div class="item-subtitle">نام و تگ‌لاین خودت رو ثبت کن</div></div>`;
-    voteListEl.appendChild(add);
+  const add = d.createElement('button');
+  add.id='openAddOption'; add.className='vote-item add-new';
+  add.innerHTML = `<div><div class="item-title">گزینه پیشنهادی جدید</div><div class="item-subtitle">نام و تگ‌لاین خودت رو ثبت کن</div></div>`;
+  voteListEl.appendChild(add);
 
   // انتخاب قبلی
   const sel = getSelectedKey();
@@ -104,71 +105,88 @@ function liveUpdateCounts(counts){
   });
 }
 
-// ========================== MODAL (Add Option) ==========================
+// ========================== MODAL (use existing pretty modal) ==========================
+// کمک‌تابع: از بین چند id رایج، اولین موجود را برمی‌گرداند
+function pick(...ids){ const sel = ids.map(id=>`#${id}`).join(','); return d.querySelector(sel); }
+
 const modal = {
   el: null, name: null, tagline: null, fullName: null, phone: null, nid: null,
-  open(){ this.el?.removeAttribute('hidden'); },
-  close(){ this.el?.setAttribute('hidden',''); },
+  open(){ if (this.el) this.el.style.display = 'grid'; },
+  close(){ if (this.el) this.el.style.display = 'none'; },
   values(){
     return {
-      name: (this.name.value || '').trim(),
-      description: (this.tagline.value || '').trim(),
-      full_name: (this.fullName.value || '').trim(),
-      phone: (this.phone.value || '').trim(),
-      national_id: (this.nid.value || '').trim()
+      name: (this.name?.value || '').trim(),
+      description: (this.tagline?.value || '').trim(),
+      full_name: (this.fullName?.value || '').trim(),
+      phone: (this.phone?.value || '').trim(),
+      national_id: (this.nid?.value || '').trim()
     };
   },
   reset(){
-    this.name.value = ''; this.tagline.value = '';
-    this.fullName.value = ''; this.phone.value = ''; this.nid.value = '';
+    if (this.name) this.name.value = '';
+    if (this.tagline) this.tagline.value = '';
+    if (this.fullName) this.fullName.value = '';
+    if (this.phone) this.phone.value = '';
+    if (this.nid) this.nid.value = '';
   },
   init(){
-    this.el       = d.getElementById('addOptionModal');
-    this.name     = d.getElementById('newOptionName');
-    this.tagline  = d.getElementById('newOptionTagline');
-    this.fullName = d.getElementById('proposerFullName');
-    this.phone    = d.getElementById('proposerPhone');
-    this.nid      = d.getElementById('proposerNID');
-    const closeBtn   = d.getElementById('modalClose');
-    const cancelBtn  = d.getElementById('modalCancel');
-    const submitBtn  = d.getElementById('modalSubmit');
+    // تلاش برای پیدا کردن idهای رایج بدون تغییر HTML شما
+    this.el       = pick('addOptionModal','addOption','optionModal');
+    this.name     = pick('newOptionName','platformName');
+    this.tagline  = pick('newOptionTagline','platformTagline');
+    this.fullName = pick('proposerFullName','submitterName');
+    this.phone    = pick('proposerPhone','submitterPhone');
+    this.nid      = pick('proposerNID','submitterNationalId');
+
+    const closeBtn   = pick('modalClose','closeAddOption');
+    const cancelBtn  = pick('modalCancel','cancelAddOption');
+    const submitBtn  = pick('modalSubmit','submitNewOption');
+
+    if (!this.el || !this.name || !submitBtn) {
+      console.warn('[modal] عناصر کافی پیدا نشد. اگر idها فرق دارند مشکلی نیست؛ فقط idهای واقعی را بده.');
+      return;
+    }
 
     // بستن
     closeBtn?.addEventListener('click', ()=> this.close());
     cancelBtn?.addEventListener('click', ()=> this.close());
-    this.el?.addEventListener('click', (e)=>{
-      if (e.target === this.el) this.close();
-    });
+    // کلیک روی بک‌دراپ
+    this.el.addEventListener('click', (e)=>{ if (e.target === this.el) this.close(); });
+    // عناصر دارای data-close
+    this.el.querySelectorAll('[data-close]').forEach(x=> x.addEventListener('click', ()=> this.close()));
 
     // ارسال
-    submitBtn?.addEventListener('click', async ()=>{
+    submitBtn.addEventListener('click', async ()=>{
       const v = this.values();
       if (!v.name) { this.name.focus(); return; }
 
+      submitBtn.disabled = true; const oldTxt = submitBtn.textContent; submitBtn.textContent = 'در حال ثبت...';
       try {
-        // فقط name و description برای /api/options لازم است؛ بقیه‌ فیلدها اگر بخواهی می‌توانیم بعداً در proposals ذخیره کنیم.
-        await POST(API_OPTIONS, { name: v.name, description: v.description });
+        // ذخیره‌ی امن اطلاعات شخصی در proposals و گزینه در options
+        await POST(API_PROPOSE, v);
 
-        // تازه‌سازی لیست
+        // ری‌لود لیست از سرور (rowid ASC → آیتم جدید انتهای لیست)
         const data = await loadOptionsAndCounts();
         render(data);
 
-        // رأی اتومات روی گزینه‌ی تازه (اختیاری ولی تجربهٔ بهتر)
+        // رأی اتومات روی گزینهٔ تازه
         try {
           await POST(API_VOTE, { userId: uid(), option: v.name });
           const { counts } = await GET(API_VOTE);
           liveUpdateCounts(counts);
           setSelectedKey(v.name);
-        } catch (e) {}
+        } catch (_) {}
 
         this.reset();
         this.close();
 
-        // اسکرول به انتهای لیست تا گزینه‌ی جدید دیده شود
+        // اسکرول به آخر تا آیتم جدید دیده شود (و دکمهٔ «گزینه پیشنهادی جدید» آخر بماند)
         d.getElementById('voteList')?.lastElementChild?.scrollIntoView({ behavior:'smooth', block:'end' });
       } catch (err) {
         console.warn('Add option API error:', err);
         alert('ثبت گزینه جدید با مشکل مواجه شد.');
+      } finally {
+        submitBtn.disabled = false; submitBtn.textContent = oldTxt || 'افزودن';
       }
     });
   }
@@ -197,12 +215,12 @@ function bindHandlers(){
     }
   });
 
-  // بازکردن پاپ‌آپ افزودن
+  // بازکردن پاپ‌آپ افزودن (هیچ promptی در کار نیست)
   voteListEl.addEventListener('click', (e)=>{
     const add = e.target.closest('#openAddOption');
     if(!add) return;
-    modal.open(); // ← دیگه prompt نداریم
-  });
+    modal.open();
+  }, true); // capture تا هندلرهای قدیمی احتمالی اصلاً اجرا نشوند
 }
 
 // ساکت کردن Tweakpane
@@ -211,7 +229,7 @@ function setupTweakpaneControls(){ if (!window.Tweakpane) return; }
 // ========================== INIT ==========================
 document.addEventListener('DOMContentLoaded', async function initVoting(){
   try {
-    modal.init(); // ← پاپ‌آپ را آماده کن
+    modal.init();
     const data = await loadOptionsAndCounts();
     render(data);
     bindHandlers();
@@ -221,117 +239,3 @@ document.addEventListener('DOMContentLoaded', async function initVoting(){
     render({ error: err, options: [], counts: {} });
   }
 });
-/* ======= ADD-ON: Wire existing pretty modal (no prompts) ======= */
-/* Adjust these if your IDs differ */
-const SELECTORS = {
-  modal:        '#addOptionModal',
-  closeBtn:     '#modalClose',
-  cancelBtn:    '#modalCancel',
-  submitBtn:    '#modalSubmit',
-  name:         '#newOptionName',
-  tagline:      '#newOptionTagline',
-  fullName:     '#proposerFullName',
-  phone:        '#proposerPhone',
-  nid:          '#proposerNID',
-  voteList:     '#voteList',
-  openAddBtnId: 'openAddOption'
-};
-
-// Quiet Tweakpane noise (optional)
-try { if (typeof window.setupTweakpaneControls === 'function') window.setupTweakpaneControls = function(){}; } catch(e){}
-
-/* Helpers already exist in your file:
-   - GET(url), POST(url)
-   - uid(), loadOptionsAndCounts(), render(data), liveUpdateCounts(counts)
-   - API_VOTE, API_OPTIONS
-*/
-
-(function wireExistingModal(){
-  const $ = (s) => document.querySelector(s);
-  const voteListEl = document.querySelector(SELECTORS.voteList);
-  if (!voteListEl) return;
-
-  const modalEl   = $(SELECTORS.modal);
-  const nameEl    = $(SELECTORS.name);
-  const tagEl     = $(SELECTORS.tagline);
-  const fullEl    = $(SELECTORS.fullName);
-  const phoneEl   = $(SELECTORS.phone);
-  const nidEl     = $(SELECTORS.nid);
-  const closeBtn  = $(SELECTORS.closeBtn);
-  const cancelBtn = $(SELECTORS.cancelBtn);
-  const submitBtn = $(SELECTORS.submitBtn);
-
-  if (!modalEl || !nameEl || !submitBtn) {
-    console.warn('[modal wiring] modal not found or missing fields'); 
-    return;
-  }
-
-  function openModal(){ modalEl.removeAttribute('hidden'); nameEl.focus(); }
-  function closeModal(){ modalEl.setAttribute('hidden',''); }
-
-  // Close actions
-  closeBtn?.addEventListener('click', closeModal);
-  cancelBtn?.addEventListener('click', closeModal);
-  modalEl.addEventListener('click', (e)=> { if (e.target === modalEl) closeModal(); });
-
-  // Intercept the "add new option" click BEFORE any other listener (capture=true)
-  voteListEl.addEventListener('click', (e)=>{
-    const btn = e.target.closest(`#${CSS.escape(SELECTORS.openAddBtnId)}`);
-    if (!btn) return;
-    e.preventDefault();
-    e.stopImmediatePropagation(); // prevent older prompt-based handler
-    openModal();
-  }, true); // ← capture phase
-
-  // Submit modal
-  submitBtn.addEventListener('click', async ()=>{
-    const name = (nameEl.value || '').trim();
-    const description = (tagEl?.value || '').trim();
-    const proposer = {
-      full_name:   (fullEl?.value  || '').trim(),
-      phone:       (phoneEl?.value || '').trim(),
-      national_id: (nidEl?.value   || '').trim()
-    };
-    if (!name) { nameEl.focus(); return; }
-
-    submitBtn.disabled = true; submitBtn.textContent = 'در حال ثبت...';
-    try {
-      // فقط name/description برای /api/options لازم است. (سایر فیلدها اگر لازم شد بعداً به /api/propose می‌فرستیم)
-      await POST(`${location.origin}/api/propose`, {
-        name,
-        description,
-        full_name: proposer.full_name,
-        phone: proposer.phone,
-        national_id: proposer.national_id
-      });
-
-      // ری‌لود لیست از سرور (سرور rowid ASC → آیتم جدید انتهای لیست)
-      const data = await loadOptionsAndCounts();
-      render(data);
-
-      // رأی اتومات روی گزینهٔ تازه (اختیاری؛ اگر نمی‌خواهی، این بلاک را حذف کن)
-      try {
-        await POST(`${location.origin}/api/vote`, { userId: uid(), option: name });
-        const { counts } = await GET(`${location.origin}/api/vote`);
-        liveUpdateCounts(counts);
-      } catch (_) {}
-
-      // خالی‌کردن فرم + بستن
-      if (tagEl)  tagEl.value  = '';
-      if (fullEl) fullEl.value = '';
-      if (phoneEl) phoneEl.value = '';
-      if (nidEl)   nidEl.value   = '';
-      nameEl.value = '';
-      closeModal();
-
-      // اسکرول به انتهای لیست تا آیتم جدید دیده شود (و دکمهٔ "گزینه پیشنهادی جدید" هم آخر بماند)
-      const list = document.querySelector(SELECTORS.voteList);
-      list?.lastElementChild?.scrollIntoView({ behavior:'smooth', block:'end' });
-    } catch (err) {
-      console.warn('Add option API error:', err);
-      alert('ثبت گزینه جدید با مشکل مواجه شد.');
-    } finally {
-      submitBtn.disabled = false; submitBtn.textContent = 'افزودن';
-    }
-  });
-})();

@@ -1,5 +1,5 @@
 // /functions/api/options.js
-// افزودن/خواندن گزینه‌ها (همیشه JSON می‌دهد) + ترتیب بر اساس rowid (جدیدترین‌ها در انتها)
+// خواندن/افزودن گزینه‌ها (JSON پایدار) — ترتیب rowid ASC تا جدیدها انتهای لیست باشند
 
 function j(body, status = 200, extra = {}) {
   return new Response(JSON.stringify(body), {
@@ -10,7 +10,6 @@ function j(body, status = 200, extra = {}) {
 
 export async function onRequestGet({ env }) {
   try {
-    // نکته‌ی مهم: ORDER BY rowid → درج‌های جدید انتهای لیست
     const { results } = await env.DB
       .prepare("SELECT option, description FROM options ORDER BY rowid ASC")
       .all();

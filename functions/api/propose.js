@@ -1,7 +1,5 @@
 // /functions/api/propose.js
-// ثبت پیشنهاد جدید (گزینه + اطلاعات شخصی)
-// مرحله ۱: ذخیره در جدول proposals
-// مرحله ۲: افزودن گزینه به جدول options
+// ثبت پیشنهاد جدید: اطلاعات شخصی در proposals و گزینه در options
 
 function j(body, status = 200, extra = {}) {
   return new Response(JSON.stringify(body), {
@@ -15,19 +13,19 @@ export async function onRequestPost({ env, request }) {
     const body = await request.json().catch(()=> ({}));
     const name = (body.name || body.option || '').trim();
     const tagline = (body.description || body.tagline || '').trim();
-    const full_name = (body.full_name || '').trim();
-    const phone = (body.phone || '').trim();
+    const full_name   = (body.full_name   || '').trim();
+    const phone       = (body.phone       || '').trim();
     const national_id = (body.national_id || '').trim();
 
     if (!name) return j({ success:false, message:"name required" }, 400);
 
-    // ذخیره در جدول proposals
+    // ذخیره در proposals (خصوصی)
     await env.DB.prepare(`
       INSERT INTO proposals (option_name, tagline, full_name, phone, national_id)
       VALUES (?1, ?2, ?3, ?4, ?5)
     `).bind(name, tagline, full_name, phone, national_id).run();
 
-    // ذخیره گزینه در جدول options (برای نمایش عمومی)
+    // ذخیره/ایجاد گزینه در options (عمومی)
     await env.DB.prepare(`
       INSERT OR IGNORE INTO options (option, description)
       VALUES (?1, ?2)
