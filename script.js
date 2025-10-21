@@ -229,128 +229,134 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
+});
 
-    // Voting logic
-    const initialOptions = [
-        { key: 'نور هدایت', tagline: 'راهی روشن برای دل‌ها', votes: 0 },
-        { key: 'راه انتظار', tagline: 'صبر فعال برای فردای بهتر', votes: 0 },
-        { key: 'همراه مهدی', tagline: 'گامی کنار یاران خوبی', votes: 0 },
-        { key: 'نسیم ظهور', tagline: 'طراوت امید در زندگی', votes: 0 },
+// ===== Voting System (مستقل از DOMContentLoaded) =====
+const API_BASE = location.origin;
+const API_VOTE = `${API_BASE}/api/vote`;
+const API_OPTIONS = `${API_BASE}/api/options`;
+
+function uid() {
+  let id = localStorage.getItem('userId');
+  if (!id) { id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('userId', id); }
+  return id;
+}
+const faNum = s => String(s).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+const VOTE_KEY = 'vote.selectedKey';
+const getSelectedKey = () => localStorage.getItem(VOTE_KEY);
+const setSelectedKey = k => localStorage.setItem(VOTE_KEY, k);
+
+async function GET(url){ const r=await fetch(url); return r.json(); }
+async function POST(url,body){ const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}); return r.json(); }
+
+async function loadOptionsAndCounts(){
+  try {
+    const [{options},{counts}] = await Promise.all([ GET(API_OPTIONS), GET(API_VOTE) ]);
+    return {options, counts};
+  } catch (error) {
+    console.warn('API not available, using fallback data:', error);
+    // Fallback data when API is not available
+    const fallbackOptions = [
+      { option: 'نور هدایت', description: 'راهی روشن برای دل‌ها' },
+      { option: 'راه انتظار', description: 'صبر فعال برای فردای بهتر' },
+      { option: 'همراه مهدی', description: 'گامی کنار یاران خوبی' },
+      { option: 'نسیم ظهور', description: 'طراوت امید در زندگی' }
     ];
+    const fallbackCounts = {};
+    fallbackOptions.forEach(opt => fallbackCounts[opt.option] = 0);
+    return { options: fallbackOptions, counts: fallbackCounts };
+  }
+}
 
-    const voteListEl = $('#voteList');
-    const STATE = new Map(initialOptions.map(o => [o.key, o.votes]));
-
-    function toPersianDigits(str) {
-        const map = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-        return String(str).replace(/\d/g, d => map[Number(d)]);
-    }
-
-    function renderVotes() {
-        if (!voteListEl) return;
-        // Sync counts in DOM
-        $$('#voteList .vote-item').forEach(btn => {
-            const key = btn.getAttribute('data-key');
-            const countEl = btn.querySelector('[data-count]');
-            if (countEl && STATE.has(key)) countEl.textContent = toPersianDigits(STATE.get(key));
-        });
-    }
-
-    // Handle voting
-    // One vote per user (switch allowed)
-    const VOTE_KEY = 'vote.selectedKey';
-    function getSelectedKey() { return localStorage.getItem(VOTE_KEY); }
-    function setSelectedKey(k) { localStorage.setItem(VOTE_KEY, k); }
-
-    voteListEl?.addEventListener('click', (e) => {
-        const target = e.target.closest('.vote-item');
-        if (!target) return;
-        const key = target.getAttribute('data-key');
-        if (!key) return;
-        const prev = getSelectedKey();
-        if (prev === key) return; // already voted here
-        if (prev && STATE.has(prev)) STATE.set(prev, Math.max(0, (STATE.get(prev) || 1) - 1));
-        STATE.set(key, (STATE.get(key) || 0) + 1);
-        setSelectedKey(key);
-        renderVotes();
-        // Micro feedback + ensure selected class toggled only one
-        target.style.transform = 'translateY(-3px) scale(1.02)';
-        setTimeout(() => { target.style.transform = ''; }, 160);
-        $$('#voteList .vote-item').forEach(b => b.classList.remove('selected'));
-        target.classList.add('selected');
-    });
-
-    // Modal controls
-    const modal = $('#addOptionModal');
-    const openBtn = $('#openAddOption');
-    const submitBtn = $('#submitNewOption');
-    const nameInput = $('#newOptionName');
-    const taglineInput = $('#newOptionTagline');
-
-    function openModal() {
-        if (!modal) return;
-        modal.style.display = 'block';
-        modal.setAttribute('aria-hidden', 'false');
-        nameInput?.focus();
-    }
-    function closeModal() {
-        if (!modal) return;
-        modal.style.display = 'none';
-        modal.setAttribute('aria-hidden', 'true');
-        nameInput.value = '';
-        taglineInput.value = '';
-    }
-
-    openBtn?.addEventListener('click', openModal);
-    modal?.addEventListener('click', (e) => {
-        if (e.target.hasAttribute('data-close')) closeModal();
-    });
-    d.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-    submitBtn?.addEventListener('click', () => {
-        const name = nameInput?.value.trim();
-        let tagline = taglineInput?.value.trim();
-        if (!name) { nameInput.focus(); return; }
-        // Limit tagline to 5 words
-        if (tagline) {
-            const parts = tagline.split(/\s+/).slice(0, 5);
-            tagline = parts.join(' ');
-        }
-        // Add new option to DOM at end (همیشه در انتهای لیست قرار می‌گیرد)
-        if (!STATE.has(name)) STATE.set(name, 0);
-        const btn = d.createElement('button');
+function render({options, counts}){
+  const voteListEl = document.getElementById('voteList');
+  if(!voteListEl) return;
+  voteListEl.innerHTML = '';
+  options.forEach(o=>{
+    const btn = document.createElement('button');
         btn.className = 'vote-item';
-        btn.setAttribute('data-key', name);
+    btn.dataset.key = o.option;
         btn.innerHTML = `
-            <div>
-                <div class="item-title">${name}</div>
-                <div class="item-subtitle">${tagline || ''}</div>
-            </div>
+      <div><div class="item-title">${o.option}</div><div class="item-subtitle">${o.description||''}</div></div>
             <span class="item-meta">
-                <span class="count-badge" data-count>۰</span>
+        <span class="count-badge" data-count>${faNum(counts[o.option]||0)}</span>
                 <span class="icon-outline" aria-hidden>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
                 </span>
             </span>`;
-        
-        // اطمینان از قرارگیری در انتهای لیست - قبل از دکمه "گزینه پیشنهادی جدید"
-        const addNewBtn = voteListEl?.querySelector('#openAddOption');
-        if (addNewBtn) {
-            voteListEl.insertBefore(btn, addNewBtn);
-        } else {
-            voteListEl?.appendChild(btn);
-        }
-        renderVotes();
-        closeModal();
-    });
+    voteListEl.appendChild(btn);
+  });
+  // دکمه افزودن گزینه جدید
+  const add = document.createElement('button');
+  add.id='openAddOption'; add.className='vote-item add-new';
+  add.innerHTML = `<div><div class="item-title">گزینه پیشنهادی جدید</div><div class="item-subtitle">نام و تگ‌لاین خودت رو ثبت کن</div></div>`;
+  voteListEl.appendChild(add);
 
-    // Initialize counts and selected state
-    renderVotes();
-    const selected = getSelectedKey();
-    if (selected) {
-        const selBtn = $(`#voteList .vote-item[data-key="${CSS.escape(selected)}"]`);
-        if (selBtn) selBtn.classList.add('selected');
+  // انتخاب قبلی
+  const sel = getSelectedKey();
+  if (sel) {
+    const btn = voteListEl.querySelector(`.vote-item[data-key="${CSS.escape(sel)}"]`);
+    if (btn) btn.classList.add('selected');
+  }
+}
+
+function liveUpdateCounts(counts){
+  const voteListEl = document.getElementById('voteList');
+  voteListEl.querySelectorAll('.vote-item[data-key]').forEach(btn=>{
+    const key = btn.dataset.key;
+    const el = btn.querySelector('[data-count]');
+    if(el) el.textContent = faNum(counts[key]||0);
+  });
+}
+
+function bindHandlers(){
+  const voteListEl = document.getElementById('voteList');
+  voteListEl.addEventListener('click', async (e)=>{
+    const btn = e.target.closest('.vote-item[data-key]');
+    if(!btn) return;
+    const key = btn.dataset.key;
+    
+    try {
+      // رأی
+      await POST(API_VOTE, { userId: uid(), option: key });
+      setSelectedKey(key);
+      voteListEl.querySelectorAll('.vote-item').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const {counts} = await GET(API_VOTE);
+      liveUpdateCounts(counts);
+    } catch (error) {
+      console.warn('Vote API not available, using local storage:', error);
+      // Fallback: just update UI locally
+      setSelectedKey(key);
+      voteListEl.querySelectorAll('.vote-item').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
     }
+  });
+
+  voteListEl.addEventListener('click', async (e)=>{
+    const add = e.target.closest('#openAddOption');
+    if(!add) return;
+    const name = prompt('نام گزینه؟'); if(!name) return;
+    const description = prompt('تگ‌لاین (اختیاری)') || '';
+    
+    try {
+      await POST(API_OPTIONS, { name, description });
+      const data = await loadOptionsAndCounts();
+      render(data);
+    } catch (error) {
+      console.warn('Add option API not available:', error);
+      alert('در حال حاضر امکان افزودن گزینه جدید وجود ندارد. لطفاً بعداً تلاش کنید.');
+    }
+  });
+}
+
+// Initialize voting system when DOM is ready
+document.addEventListener('DOMContentLoaded', async function initVoting(){
+  try {
+    const data = await loadOptionsAndCounts();
+    render(data);
+    bindHandlers();
+  } catch (err){ console.error('vote init error', err); }
 });
 
 async function animateNameToParticles(userName) {
