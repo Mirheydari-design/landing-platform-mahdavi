@@ -235,6 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
 const API_BASE = location.origin;
 const API_VOTE = `${API_BASE}/api/vote`;
 const API_OPTIONS = `${API_BASE}/api/options`;
+const API_CONFIG = `${API_BASE}/api/config`;
+
+window.APP = { allowAddOptions: true }; // پیش‌فرض؛ بعد از fetch config اصلاح می‌شود
 
 function uid() {
   let id = localStorage.getItem('userId');
@@ -301,11 +304,13 @@ function render({options, counts, error}){
             </span>`;
     voteListEl.appendChild(btn);
   });
-  // دکمه افزودن گزینه جدید
-  const add = document.createElement('button');
-  add.id='openAddOption'; add.className='vote-item add-new';
-  add.innerHTML = `<div><div class="item-title">گزینه پیشنهادی جدید</div><div class="item-subtitle">نام و تگ‌لاین خودت رو ثبت کن</div></div>`;
-  voteListEl.appendChild(add);
+  // دکمه افزودن گزینه جدید (فقط اگر اجازه داده شده)
+  if (window.APP.allowAddOptions) {
+    const add = document.createElement('button');
+    add.id='openAddOption'; add.className='vote-item add-new';
+    add.innerHTML = `<div><div class="item-title">گزینه پیشنهادی جدید</div><div class="item-subtitle">نام و تگ‌لاین خودت رو ثبت کن</div></div>`;
+    voteListEl.appendChild(add);
+  }
 
   // انتخاب قبلی
   const sel = getSelectedKey();
@@ -373,187 +378,66 @@ function bindHandlers(){
     }
   });
 
-  // Handle opening modal for new option
+  // رویداد افزودن (دکمه‌ی کارت add-new)
   voteListEl.addEventListener('click', async (e)=>{
     const add = e.target.closest('#openAddOption');
     if(!add) return;
-    
-    // Open the modal
-    const modal = document.getElementById('addOptionModal');
-    if (modal) {
-      modal.style.display = 'block';
-      modal.setAttribute('aria-hidden', 'false');
-      const platformNameInput = document.getElementById('platformName');
-      if (platformNameInput) platformNameInput.focus();
+
+    // اگر مودِ فرم مدرن داری، از آن فیلدها بخوان:
+    const nameEl = document.querySelector('#platformName');
+    const tagEl  = document.querySelector('#platformTagline');
+    const name = (nameEl?.value || prompt('نام گزینه؟') || '').trim();
+    if(!name) return;
+    const description = (tagEl?.value || prompt('تگ‌لاین (اختیاری)') || '').trim();
+
+    try {
+      const res = await POST(API_OPTIONS, { name, description });
+      if (res && res.success === false && res.code === 'disabled') {
+        alert('فعلاً افزودن گزینه جدید غیرفعال است.');
+        return;
+      }
+
+      // لیست گزینه‌ها را دوباره بگیر و رندر کن
+      const data = await loadOptionsAndCounts();
+      render(data);
+
+      // گزینه‌ی جدید را انتخاب کن
+      const voteListEl = document.getElementById('voteList');
+      const btn = voteListEl.querySelector(`.vote-item[data-key="${CSS.escape(name)}"]`);
+      if (btn) btn.classList.add('selected');
+
+      // (اختیاری اما UX خوب) بلافاصله یک رأی هم برای خودش ثبت کن
+      try {
+        await POST(API_VOTE, { userId: uid(), option: name });
+        const { counts } = await GET(API_VOTE);
+        liveUpdateCounts(counts);
+      } catch (e) {
+        console.warn('Auto-vote failed:', e);
+      }
+
+      // اگر فرم داشتی، بعد از موفقیت خالی‌اش کن
+      if (nameEl) nameEl.value = '';
+      if (tagEl) tagEl.value = '';
+
+    } catch (error) {
+      console.warn('Add option API error:', error);
+      alert('ثبت گزینه جدید با مشکل مواجه شد.');
     }
   });
-
-  // Handle modal submission
-  const submitNewOption = document.getElementById('submitNewOption');
-  if (submitNewOption) {
-    submitNewOption.addEventListener('click', async () => {
-      const platformNameInput = document.getElementById('platformName');
-      const platformTaglineInput = document.getElementById('platformTagline');
-      const submitterNameInput = document.getElementById('submitterName');
-      const submitterPhoneInput = document.getElementById('submitterPhone');
-      const submitterNationalIdInput = document.getElementById('submitterNationalId');
-      
-      if (!platformNameInput || !platformTaglineInput || !submitterNameInput || !submitterPhoneInput || !submitterNationalIdInput) return;
-      
-      const platformName = platformNameInput.value.trim();
-      const platformTagline = platformTaglineInput.value.trim();
-      const submitterName = submitterNameInput.value.trim();
-      const submitterPhone = submitterPhoneInput.value.trim();
-      const submitterNationalId = submitterNationalIdInput.value.trim();
-      
-      // Validation
-      if (!platformName) {
-        platformNameInput.focus();
-        alert('لطفاً نام پلتفرم پیشنهادی را وارد کنید');
-        return;
-      }
-      if (!submitterName) {
-        submitterNameInput.focus();
-        alert('لطفاً نام و نام خانوادگی را وارد کنید');
-        return;
-      }
-      if (!submitterPhone) {
-        submitterPhoneInput.focus();
-        alert('لطفاً شماره تماس را وارد کنید');
-        return;
-      }
-      if (!submitterNationalId) {
-        submitterNationalIdInput.focus();
-        alert('لطفاً کد ملی را وارد کنید');
-        return;
-      }
-      
-      // Basic phone validation (Iranian format)
-      if (!/^09\d{9}$/.test(submitterPhone)) {
-        submitterPhoneInput.focus();
-        alert('شماره تماس باید با 09 شروع شود و 11 رقم باشد');
-        return;
-      }
-      
-      // Basic national ID validation (10 digits)
-      if (!/^\d{10}$/.test(submitterNationalId)) {
-        submitterNationalIdInput.focus();
-        alert('کد ملی باید 10 رقم باشد');
-        return;
-      }
-      
-      try {
-        await POST(API_OPTIONS, { 
-          name: platformName, 
-          description: platformTagline, 
-          submitterName,
-          phone: submitterPhone, 
-          nationalId: submitterNationalId 
-        });
-        const data = await loadOptionsAndCounts();
-        render(data);
-        
-        // Close modal and clear inputs
-        const modal = document.getElementById('addOptionModal');
-        if (modal) {
-          modal.style.display = 'none';
-          modal.setAttribute('aria-hidden', 'true');
-        }
-        platformNameInput.value = '';
-        platformTaglineInput.value = '';
-        submitterNameInput.value = '';
-        submitterPhoneInput.value = '';
-        submitterNationalIdInput.value = '';
-        
-        alert('پیشنهاد شما با موفقیت ارسال شد! ممنون از مشارکت شما 🙏');
-      } catch (error) {
-        console.warn('Add option API not available, adding locally:', error);
-        
-        // Fallback: Add option locally
-        const voteListEl = document.getElementById('voteList');
-        if (voteListEl) {
-          // Create new option button
-          const newBtn = document.createElement('button');
-          newBtn.className = 'vote-item';
-          newBtn.dataset.key = platformName;
-          newBtn.innerHTML = `
-            <div><div class="item-title">${platformName}</div><div class="item-subtitle">${platformTagline || ''}</div></div>
-            <span class="item-meta">
-              <span class="count-badge" data-count>۰</span>
-              <span class="icon-outline" aria-hidden>
-                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
-              </span>
-            </span>`;
-          
-          // Insert before the "add new" button to keep it at the end
-          const addNewBtn = voteListEl.querySelector('#openAddOption');
-          if (addNewBtn) {
-            voteListEl.insertBefore(newBtn, addNewBtn);
-          } else {
-            voteListEl.appendChild(newBtn);
-          }
-        }
-        
-        // Close modal and clear inputs
-        const modal = document.getElementById('addOptionModal');
-        if (modal) {
-          modal.style.display = 'none';
-          modal.setAttribute('aria-hidden', 'true');
-        }
-        platformNameInput.value = '';
-        platformTaglineInput.value = '';
-        submitterNameInput.value = '';
-        submitterPhoneInput.value = '';
-        submitterNationalIdInput.value = '';
-        
-        alert('پیشنهاد شما با موفقیت اضافه شد! ممنون از مشارکت شما 🙏');
-      }
-    });
-  }
-
-  // Handle modal close
-  const modal = document.getElementById('addOptionModal');
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      if (e.target.hasAttribute('data-close')) {
-        modal.style.display = 'none';
-        modal.setAttribute('aria-hidden', 'true');
-        const platformNameInput = document.getElementById('platformName');
-        const platformTaglineInput = document.getElementById('platformTagline');
-        const submitterNameInput = document.getElementById('submitterName');
-        const submitterPhoneInput = document.getElementById('submitterPhone');
-        const submitterNationalIdInput = document.getElementById('submitterNationalId');
-        if (platformNameInput) platformNameInput.value = '';
-        if (platformTaglineInput) platformTaglineInput.value = '';
-        if (submitterNameInput) submitterNameInput.value = '';
-        if (submitterPhoneInput) submitterPhoneInput.value = '';
-        if (submitterNationalIdInput) submitterNationalIdInput.value = '';
-      }
-    });
-    
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.style.display === 'block') {
-        modal.style.display = 'none';
-        modal.setAttribute('aria-hidden', 'true');
-        const platformNameInput = document.getElementById('platformName');
-        const platformTaglineInput = document.getElementById('platformTagline');
-        const submitterNameInput = document.getElementById('submitterName');
-        const submitterPhoneInput = document.getElementById('submitterPhone');
-        const submitterNationalIdInput = document.getElementById('submitterNationalId');
-        if (platformNameInput) platformNameInput.value = '';
-        if (platformTaglineInput) platformTaglineInput.value = '';
-        if (submitterNameInput) submitterNameInput.value = '';
-        if (submitterPhoneInput) submitterPhoneInput.value = '';
-        if (submitterNationalIdInput) submitterNationalIdInput.value = '';
-      }
-    });
-  }
 }
 
 // Initialize voting system when DOM is ready
 document.addEventListener('DOMContentLoaded', async function initVoting(){
   try {
+    // 1) کانفیگ
+    try {
+      const cfg = await GET(API_CONFIG);
+      if (cfg && typeof cfg.allowAddOptions === 'boolean') {
+        window.APP.allowAddOptions = cfg.allowAddOptions;
+      }
+    } catch (_) { /* اگر نگرفتیم، پیش‌فرض true می‌ماند */ }
+
+    // 2) دیتا
     const data = await loadOptionsAndCounts();
     render(data);
     bindHandlers();

@@ -1,6 +1,8 @@
 export async function onRequestGet(context) {
   const db = context.env.DB;
-  const { results } = await db.prepare("SELECT option, description FROM options ORDER BY option").all();
+  const { results } = await db.prepare(
+    "SELECT option, description FROM options ORDER BY option"
+  ).all();
   return new Response(JSON.stringify({ options: results }), {
     headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
   });
@@ -8,30 +10,37 @@ export async function onRequestGet(context) {
 
 export async function onRequestPost(context) {
   const db = context.env.DB;
+  const env = context.env;
+
+  // سوئیچ روشن/خاموش از تنظیمات Pages → Settings → Variables
+  const allow = String(env.ADD_OPTIONS_ENABLED ?? "1").toLowerCase();
+  const isEnabled = !(allow === "0" || allow === "false" || allow === "off");
+  if (!isEnabled) {
+    return new Response(JSON.stringify({ success:false, code:"disabled" }), {
+      status: 403,
+      headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+    });
+  }
+
   const body = await context.request.json().catch(() => ({}));
-  const platformName = (body.name || "").trim();
-  const platformTagline = (body.description || "").trim();
-  const submitterName = (body.submitterName || "").trim();
-  const submitterPhone = (body.phone || "").trim();
-  const submitterNationalId = (body.nationalId || "").trim();
+  let name = (body.option || body.name || "").trim().replace(/\s+/g, " ");
+  const description = (body.description || "").trim();
 
-  if (!platformName) return new Response(JSON.stringify({ success:false, message:"platform name required" }), { status:400 });
-  if (!submitterName) return new Response(JSON.stringify({ success:false, message:"submitter name required" }), { status:400 });
-  if (!submitterPhone) return new Response(JSON.stringify({ success:false, message:"phone required" }), { status:400 });
-  if (!submitterNationalId) return new Response(JSON.stringify({ success:false, message:"nationalId required" }), { status:400 });
+  if (!name) return new Response(JSON.stringify({ success:false, message:"name required" }), { status:400 });
 
-  // Basic validation
-  if (!/^09\d{9}$/.test(submitterPhone)) {
-    return new Response(JSON.stringify({ success:false, message:"invalid phone format" }), { status:400 });
-  }
-  if (!/^\d{10}$/.test(submitterNationalId)) {
-    return new Response(JSON.stringify({ success:false, message:"invalid nationalId format" }), { status:400 });
-  }
+  // محدودیت‌های منطقی
+  if (name.length > 64)  return new Response(JSON.stringify({ success:false, message:"name too long" }), { status:400 });
+  if (description.length > 160) return new Response(JSON.stringify({ success:false, message:"tagline too long" }), { status:400 });
 
-  await db.prepare("INSERT OR IGNORE INTO options (option, description, submitterName, phone, nationalId) VALUES (?1,?2,?3,?4,?5)")
-          .bind(platformName, platformTagline, submitterName, submitterPhone, submitterNationalId).run();
+  // درج (تکراری را نادیده می‌گیرد)
+  await db.prepare("INSERT OR IGNORE INTO options (option, description) VALUES (?1,?2)")
+          .bind(name, description).run();
 
-  return new Response(JSON.stringify({ success:true }), {
+  // بفهمیم واقعاً درج شد یا قبلاً وجود داشت
+  const { results } = await db.prepare("SELECT option FROM options WHERE option=?1").bind(name).all();
+  const created = results.length > 0; // در هر صورت الان وجود دارد
+
+  return new Response(JSON.stringify({ success:true, created }), {
     headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
   });
 }
@@ -47,4 +56,3 @@ export async function onRequestOptions() {
     }
   });
 }
-
