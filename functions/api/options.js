@@ -1,56 +1,63 @@
-// /functions/api/options.js
+/**
+ * /functions/api/options.js
+ * وظیفه: خواندن و افزودن گزینه‌های رأی‌گیری
+ */
 
-function j(body, status = 200, extra = {}) {
+function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json", "access-control-allow-origin": "*", ...extra }
+    headers: {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*"
+    }
   });
 }
 
-// GET: لیست گزینه‌ها
+// ✅ GET: لیست گزینه‌ها
 export async function onRequestGet({ env }) {
   try {
     const { results } = await env.DB
       .prepare("SELECT option, description FROM options ORDER BY option")
       .all();
-    return j({ options: results || [] });
+    return json({ options: results || [] });
   } catch (err) {
-    return j({ success: false, error: String(err) }, 500);
+    return json({ success: false, error: String(err) }, 500);
   }
 }
 
-// POST: افزودن گزینه جدید (همان لحظه ذخیره شود)
+// ✅ POST: افزودن گزینه جدید
 export async function onRequestPost({ env, request }) {
   try {
     const body = await request.json().catch(() => ({}));
-    // از هر دو اسم کلید پشتیبانی کن
-    let name = (body.name || body.option || "").trim().replace(/\s+/g, " ");
+
+    // ورودی‌ها
+    const name = (body.name || body.option || "").trim();
     const description = (body.description || "").trim();
 
-    if (!name) return j({ success: false, message: "name required" }, 400);
-    if (name.length > 64) return j({ success: false, message: "name too long" }, 400);
-    if (description.length > 160) return j({ success: false, message: "tagline too long" }, 400);
+    // اعتبارسنجی
+    if (!name) return json({ success: false, message: "name required" }, 400);
+    if (name.length > 64) return json({ success: false, message: "name too long" }, 400);
+    if (description.length > 160) return json({ success: false, message: "tagline too long" }, 400);
 
-    // درج امن (تکراری را نادیده می‌گیرد)
-    await env.DB
-      .prepare("INSERT OR IGNORE INTO options (option, description) VALUES (?1, ?2)")
-      .bind(name, description)
-      .run();
+    // درج در دیتابیس
+    await env.DB.prepare(
+      "INSERT OR IGNORE INTO options (option, description) VALUES (?1, ?2)"
+    ).bind(name, description).run();
 
-    // وجودش را چک کنیم (اگر قبلاً بوده، باز هم ok)
+    // تأیید درج
     const { results } = await env.DB
-      .prepare("SELECT option FROM options WHERE option=?1")
+      .prepare("SELECT option FROM options WHERE option = ?1")
       .bind(name)
       .all();
 
-    return j({ success: true, created: results && results.length > 0 });
+    return json({ success: true, created: results.length > 0 });
   } catch (err) {
-    // خیلی مهم: حتی در خطا هم JSON بده تا فرانت گیر "<!DOCTYPE" نخورد
-    return j({ success: false, error: String(err) }, 500);
+    // ✅ مهم: همیشه JSON برگردان تا "<!DOCTYPE" خطا ندهد
+    return json({ success: false, error: String(err) }, 500);
   }
 }
 
-// CORS برای preflight
+// ✅ OPTIONS: برای CORS
 export async function onRequestOptions() {
   return new Response(null, {
     status: 204,

@@ -81,7 +81,7 @@ async function submitFeedback() {
 
 // Tweakpane controls (quiet: no console noise)
 function setupTweakpaneControls() {
-    if (typeof Tweakpane === 'undefined') return; // ← بی‌صدا رد شو
+    if (!window.Tweakpane) return; // دیگر هیچ لاگی نشان نمی‌دهد
     const PARAMS = { name_scale: 1.5, typing_blur: 8, typing_brightness: 0.9 };
     const pane = new Tweakpane.Pane({ title: 'تنظیمات انیمیشن', expanded: true });
     pane.addBinding(PARAMS, 'name_scale', { min:1, max:5, step:0.1, label:'بزرگی انیمیشن نام' })
