@@ -169,20 +169,38 @@
         </div>
     </section>
 
-    <!-- Minimal Modal for new option -->
+    <!-- Modal for platform name suggestion -->
     <div class="modal" id="addOptionModal" aria-hidden="true" style="display:none;">
         <div class="modal-backdrop" data-close></div>
         <div class="modal-content" role="dialog" aria-modal="true">
-            <h3 class="modal-title">افزودن گزینه جدید</h3>
-            <div class="modal-row">
-                <input type="text" id="newOptionName" class="modal-input" placeholder="اسم پیشنهادی">
+            <h3 class="modal-title">پیشنهاد نام پلتفرم</h3>
+            
+            <div class="modal-section">
+                <h4 class="modal-section-title">پیشنهاد شما</h4>
+                <div class="modal-row">
+                    <input type="text" id="platformName" class="modal-input" placeholder="نام پلتفرم پیشنهادی" required>
+                </div>
+                <div class="modal-row">
+                    <input type="text" id="platformTagline" class="modal-input" placeholder="تگ‌لاین پلتفرم (اختیاری)">
+                </div>
             </div>
-            <div class="modal-row">
-                <input type="text" id="newOptionTagline" class="modal-input" placeholder="تگ‌لاین (اختیاری)">
+            
+            <div class="modal-section">
+                <h4 class="modal-section-title">اطلاعات شما</h4>
+                <div class="modal-row">
+                    <input type="text" id="submitterName" class="modal-input" placeholder="نام و نام خانوادگی" required>
+                </div>
+                <div class="modal-row">
+                    <input type="tel" id="submitterPhone" class="modal-input" placeholder="شماره تماس" required>
+                </div>
+                <div class="modal-row">
+                    <input type="text" id="submitterNationalId" class="modal-input" placeholder="کد ملی" required>
+                </div>
             </div>
+            
             <div class="modal-actions">
                 <button class="modal-btn secondary" data-close>انصراف</button>
-                <button class="modal-btn primary" id="submitNewOption">افزودن</button>
+                <button class="modal-btn primary" id="submitNewOption">ارسال پیشنهاد</button>
             </div>
         </div>
     </div>

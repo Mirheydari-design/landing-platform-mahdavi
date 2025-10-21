@@ -242,6 +242,13 @@ function uid() {
   return id;
 }
 const faNum = s => String(s).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+// Convert Persian numerals back to a normal number
+const fromFaNum = s => {
+  return Number(String(s).replace(/[۰-۹]/g, ch => {
+    const idx = '۰۱۲۳۴۵۶۷۸۹'.indexOf(ch);
+    return idx >= 0 ? String(idx) : ch;
+  }));
+};
 const VOTE_KEY = 'vote.selectedKey';
 const getSelectedKey = () => localStorage.getItem(VOTE_KEY);
 const setSelectedKey = k => localStorage.setItem(VOTE_KEY, k);
@@ -251,8 +258,9 @@ async function POST(url,body){ const r=await fetch(url,{method:'POST',headers:{'
 
 async function loadOptionsAndCounts(){
   try {
-    const [{options},{counts}] = await Promise.all([ GET(API_OPTIONS), GET(API_VOTE) ]);
-    return {options, counts};
+    const [{ options }, { counts }] = await Promise.all([ GET(API_OPTIONS), GET(API_VOTE) ]);
+    // Ensure at least empty defaults to avoid undefined errors
+    return { options: options || [], counts: counts || {} };
   } catch (error) {
     console.warn('API not available, using fallback data:', error);
     // Fallback data when API is not available
@@ -327,27 +335,213 @@ function bindHandlers(){
     } catch (error) {
       console.warn('Vote API not available, using local storage:', error);
       // Fallback: just update UI locally
+      const previousKey = getSelectedKey();
+      
+      // If changing vote, decrement previous count
+      if (previousKey && previousKey !== key) {
+        const prevBtn = voteListEl.querySelector(`.vote-item[data-key="${CSS.escape(previousKey)}"]`);
+        if (prevBtn) {
+          const prevBadge = prevBtn.querySelector('[data-count]');
+          if (prevBadge) {
+            const prevNumber = fromFaNum(prevBadge.textContent) || 0;
+            const newPrevNumber = Math.max(0, prevNumber - 1);
+            prevBadge.textContent = faNum(newPrevNumber);
+          }
+        }
+      }
+      
+      // Only increment if this is a new vote (not changing from same option)
+      if (previousKey !== key) {
+        const badge = btn.querySelector('[data-count]');
+        if (badge) {
+          const currentNumber = fromFaNum(badge.textContent) || 0;
+          const newNumber = currentNumber + 1;
+          badge.textContent = faNum(newNumber);
+        }
+      }
+      
       setSelectedKey(key);
       voteListEl.querySelectorAll('.vote-item').forEach(b=>b.classList.remove('selected'));
       btn.classList.add('selected');
     }
   });
 
+  // Handle opening modal for new option
   voteListEl.addEventListener('click', async (e)=>{
     const add = e.target.closest('#openAddOption');
     if(!add) return;
-    const name = prompt('نام گزینه؟'); if(!name) return;
-    const description = prompt('تگ‌لاین (اختیاری)') || '';
     
-    try {
-      await POST(API_OPTIONS, { name, description });
-      const data = await loadOptionsAndCounts();
-      render(data);
-    } catch (error) {
-      console.warn('Add option API not available:', error);
-      alert('در حال حاضر امکان افزودن گزینه جدید وجود ندارد. لطفاً بعداً تلاش کنید.');
+    // Open the modal
+    const modal = document.getElementById('addOptionModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
+      const platformNameInput = document.getElementById('platformName');
+      if (platformNameInput) platformNameInput.focus();
     }
   });
+
+  // Handle modal submission
+  const submitNewOption = document.getElementById('submitNewOption');
+  if (submitNewOption) {
+    submitNewOption.addEventListener('click', async () => {
+      const platformNameInput = document.getElementById('platformName');
+      const platformTaglineInput = document.getElementById('platformTagline');
+      const submitterNameInput = document.getElementById('submitterName');
+      const submitterPhoneInput = document.getElementById('submitterPhone');
+      const submitterNationalIdInput = document.getElementById('submitterNationalId');
+      
+      if (!platformNameInput || !platformTaglineInput || !submitterNameInput || !submitterPhoneInput || !submitterNationalIdInput) return;
+      
+      const platformName = platformNameInput.value.trim();
+      const platformTagline = platformTaglineInput.value.trim();
+      const submitterName = submitterNameInput.value.trim();
+      const submitterPhone = submitterPhoneInput.value.trim();
+      const submitterNationalId = submitterNationalIdInput.value.trim();
+      
+      // Validation
+      if (!platformName) {
+        platformNameInput.focus();
+        alert('لطفاً نام پلتفرم پیشنهادی را وارد کنید');
+        return;
+      }
+      if (!submitterName) {
+        submitterNameInput.focus();
+        alert('لطفاً نام و نام خانوادگی را وارد کنید');
+        return;
+      }
+      if (!submitterPhone) {
+        submitterPhoneInput.focus();
+        alert('لطفاً شماره تماس را وارد کنید');
+        return;
+      }
+      if (!submitterNationalId) {
+        submitterNationalIdInput.focus();
+        alert('لطفاً کد ملی را وارد کنید');
+        return;
+      }
+      
+      // Basic phone validation (Iranian format)
+      if (!/^09\d{9}$/.test(submitterPhone)) {
+        submitterPhoneInput.focus();
+        alert('شماره تماس باید با 09 شروع شود و 11 رقم باشد');
+        return;
+      }
+      
+      // Basic national ID validation (10 digits)
+      if (!/^\d{10}$/.test(submitterNationalId)) {
+        submitterNationalIdInput.focus();
+        alert('کد ملی باید 10 رقم باشد');
+        return;
+      }
+      
+      try {
+        await POST(API_OPTIONS, { 
+          name: platformName, 
+          description: platformTagline, 
+          submitterName,
+          phone: submitterPhone, 
+          nationalId: submitterNationalId 
+        });
+        const data = await loadOptionsAndCounts();
+        render(data);
+        
+        // Close modal and clear inputs
+        const modal = document.getElementById('addOptionModal');
+        if (modal) {
+          modal.style.display = 'none';
+          modal.setAttribute('aria-hidden', 'true');
+        }
+        platformNameInput.value = '';
+        platformTaglineInput.value = '';
+        submitterNameInput.value = '';
+        submitterPhoneInput.value = '';
+        submitterNationalIdInput.value = '';
+        
+        alert('پیشنهاد شما با موفقیت ارسال شد! ممنون از مشارکت شما 🙏');
+      } catch (error) {
+        console.warn('Add option API not available, adding locally:', error);
+        
+        // Fallback: Add option locally
+        const voteListEl = document.getElementById('voteList');
+        if (voteListEl) {
+          // Create new option button
+          const newBtn = document.createElement('button');
+          newBtn.className = 'vote-item';
+          newBtn.dataset.key = platformName;
+          newBtn.innerHTML = `
+            <div><div class="item-title">${platformName}</div><div class="item-subtitle">${platformTagline || ''}</div></div>
+            <span class="item-meta">
+              <span class="count-badge" data-count>۰</span>
+              <span class="icon-outline" aria-hidden>
+                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+              </span>
+            </span>`;
+          
+          // Insert before the "add new" button to keep it at the end
+          const addNewBtn = voteListEl.querySelector('#openAddOption');
+          if (addNewBtn) {
+            voteListEl.insertBefore(newBtn, addNewBtn);
+          } else {
+            voteListEl.appendChild(newBtn);
+          }
+        }
+        
+        // Close modal and clear inputs
+        const modal = document.getElementById('addOptionModal');
+        if (modal) {
+          modal.style.display = 'none';
+          modal.setAttribute('aria-hidden', 'true');
+        }
+        platformNameInput.value = '';
+        platformTaglineInput.value = '';
+        submitterNameInput.value = '';
+        submitterPhoneInput.value = '';
+        submitterNationalIdInput.value = '';
+        
+        alert('پیشنهاد شما با موفقیت اضافه شد! ممنون از مشارکت شما 🙏');
+      }
+    });
+  }
+
+  // Handle modal close
+  const modal = document.getElementById('addOptionModal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target.hasAttribute('data-close')) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        const platformNameInput = document.getElementById('platformName');
+        const platformTaglineInput = document.getElementById('platformTagline');
+        const submitterNameInput = document.getElementById('submitterName');
+        const submitterPhoneInput = document.getElementById('submitterPhone');
+        const submitterNationalIdInput = document.getElementById('submitterNationalId');
+        if (platformNameInput) platformNameInput.value = '';
+        if (platformTaglineInput) platformTaglineInput.value = '';
+        if (submitterNameInput) submitterNameInput.value = '';
+        if (submitterPhoneInput) submitterPhoneInput.value = '';
+        if (submitterNationalIdInput) submitterNationalIdInput.value = '';
+      }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'block') {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        const platformNameInput = document.getElementById('platformName');
+        const platformTaglineInput = document.getElementById('platformTagline');
+        const submitterNameInput = document.getElementById('submitterName');
+        const submitterPhoneInput = document.getElementById('submitterPhone');
+        const submitterNationalIdInput = document.getElementById('submitterNationalId');
+        if (platformNameInput) platformNameInput.value = '';
+        if (platformTaglineInput) platformTaglineInput.value = '';
+        if (submitterNameInput) submitterNameInput.value = '';
+        if (submitterPhoneInput) submitterPhoneInput.value = '';
+        if (submitterNationalIdInput) submitterNationalIdInput.value = '';
+      }
+    });
+  }
 }
 
 // Initialize voting system when DOM is ready

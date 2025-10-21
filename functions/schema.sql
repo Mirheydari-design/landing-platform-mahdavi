@@ -10,6 +10,9 @@ CREATE INDEX IF NOT EXISTS idx_votes_user_ts ON votes(userId, ts DESC);
 -- Options: لیست گزینه‌ها (اسم یکتا)
 CREATE TABLE IF NOT EXISTS options (
   option TEXT PRIMARY KEY,
-  description TEXT DEFAULT ''
+  description TEXT DEFAULT '',
+  submitterName TEXT,
+  phone TEXT,
+  nationalId TEXT
 );
 
