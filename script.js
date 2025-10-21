@@ -259,27 +259,34 @@ async function POST(url,body){ const r=await fetch(url,{method:'POST',headers:{'
 async function loadOptionsAndCounts(){
   try {
     const [{ options }, { counts }] = await Promise.all([ GET(API_OPTIONS), GET(API_VOTE) ]);
-    // Ensure at least empty defaults to avoid undefined errors
     return { options: options || [], counts: counts || {} };
   } catch (error) {
-    console.warn('API not available, using fallback data:', error);
-    // Fallback data when API is not available
-    const fallbackOptions = [
-      { option: 'نور هدایت', description: 'راهی روشن برای دل‌ها' },
-      { option: 'راه انتظار', description: 'صبر فعال برای فردای بهتر' },
-      { option: 'همراه مهدی', description: 'گامی کنار یاران خوبی' },
-      { option: 'نسیم ظهور', description: 'طراوت امید در زندگی' }
-    ];
-    const fallbackCounts = {};
-    fallbackOptions.forEach(opt => fallbackCounts[opt.option] = 0);
-    return { options: fallbackOptions, counts: fallbackCounts };
+    console.error('API Error:', error);
+    throw error; // Re-throw to handle in calling function
   }
 }
 
-function render({options, counts}){
+function render({options, counts, error}){
   const voteListEl = document.getElementById('voteList');
   if(!voteListEl) return;
   voteListEl.innerHTML = '';
+  
+  if (error) {
+    // Show error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: #ff6b6b; background: rgba(255, 107, 107, 0.1); border-radius: 12px; border: 1px solid rgba(255, 107, 107, 0.3);">
+        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">⚠️ خطا در اتصال به سرور</h3>
+        <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">نمی‌توانیم گزینه‌ها را از دیتابیس لود کنیم</p>
+        <p style="font-size: 0.8rem; opacity: 0.8;">خطا: ${error.message || 'API در دسترس نیست'}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(255, 107, 107, 0.2); border: 1px solid rgba(255, 107, 107, 0.4); border-radius: 8px; color: #ff6b6b; cursor: pointer;">تلاش مجدد</button>
+      </div>
+    `;
+    voteListEl.appendChild(errorDiv);
+    return;
+  }
+  
   options.forEach(o=>{
     const btn = document.createElement('button');
         btn.className = 'vote-item';
@@ -550,7 +557,10 @@ document.addEventListener('DOMContentLoaded', async function initVoting(){
     const data = await loadOptionsAndCounts();
     render(data);
     bindHandlers();
-  } catch (err){ console.error('vote init error', err); }
+  } catch (err){ 
+    console.error('vote init error', err);
+    render({ error: err });
+  }
 });
 
 async function animateNameToParticles(userName) {
