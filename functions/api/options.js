@@ -22,3 +22,15 @@ export async function onRequestPost(context) {
   });
 }
 
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET,POST,OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400"
+    }
+  });
+}
+
