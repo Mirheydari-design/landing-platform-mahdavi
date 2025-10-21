@@ -1,39 +1,44 @@
-export async function onRequestGet(context) {
-  const db = context.env.DB;
-  // «آخرین رأی هر کاربر» → شمارش بر اساس همون
-  const sql = `
-    WITH last_ts AS (
-      SELECT userId, MAX(ts) AS ts
-      FROM votes
-      GROUP BY userId
-    )
-    SELECT v.option AS option, COUNT(*) AS count
-    FROM votes v
-    JOIN last_ts l ON l.userId = v.userId AND l.ts = v.ts
-    GROUP BY v.option
-  `;
-  const { results } = await db.prepare(sql).all();
-
-  const counts = {};
-  for (const row of results) counts[row.option] = row.count;
-
-  return new Response(JSON.stringify({ counts }), {
-    headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+function json(body, status = 200, extra = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type":"application/json", "access-control-allow-origin":"*", ...extra }
   });
 }
 
-export async function onRequestPost(context) {
-  const db = context.env.DB;
-  const { option, userId } = await context.request.json().catch(() => ({}));
-  if (!option || !userId) {
-    return new Response(JSON.stringify({ success:false, message:"missing fields" }), { status:400 });
+export async function onRequestGet({ env }) {
+  try {
+    // فقط «آخرین» رأی هر کاربر شمرده می‌شود
+    const sql = `
+      WITH last_ts AS (
+        SELECT userId, MAX(ts) AS ts
+        FROM votes
+        GROUP BY userId
+      )
+      SELECT v.option AS option, COUNT(*) AS count
+      FROM votes v
+      JOIN last_ts l ON l.userId = v.userId AND l.ts = v.ts
+      GROUP BY v.option
+    `;
+    const { results } = await env.DB.prepare(sql).all();
+    const counts = {};
+    results.forEach(r => counts[r.option] = Number(r.count || 0));
+    return json({ counts });
+  } catch (err) {
+    return json({ error: "GET /api/vote failed", detail: String(err) }, 500);
   }
-  const ts = Date.now();
-  await db.prepare("INSERT INTO votes (ts,userId,option) VALUES (?1,?2,?3)")
-          .bind(ts, userId, option).run();
-
-  return new Response(JSON.stringify({ success:true }), {
-    headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
-  });
 }
 
+export async function onRequestPost({ env, request }) {
+  try {
+    const { option, userId } = await request.json().catch(() => ({}));
+    if (!option || !userId) {
+      return json({ success: false, message: "missing fields" }, 400);
+    }
+    const ts = Date.now();
+    await env.DB.prepare("INSERT INTO votes (ts,userId,option) VALUES (?1,?2,?3)")
+            .bind(ts, userId, option).run();
+    return json({ success: true });
+  } catch (err) {
+    return json({ error: "POST /api/vote failed", detail: String(err) }, 500);
+  }
+}

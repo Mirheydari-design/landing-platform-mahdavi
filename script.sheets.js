@@ -113,7 +113,13 @@ function applyCountsToUI(counts) {
                     </svg>
                 </span>
             </span>`;
-      voteListEl?.appendChild(btn);
+      // Insert before the "add new" button to keep it at the end
+      const addNewBtn = voteListEl?.querySelector('#openAddOption');
+      if (addNewBtn) {
+          voteListEl.insertBefore(btn, addNewBtn);
+      } else {
+          voteListEl?.appendChild(btn);
+      }
     }
   });
 
@@ -398,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const parts = tagline.split(/\s+/).slice(0, 5);
             tagline = parts.join(' ');
         }
-        // Add new option to DOM at end
+        // Add new option to DOM before the "add new" button
         if (!STATE.has(name)) STATE.set(name, 0);
         const btn = d.createElement('button');
         btn.className = 'vote-item';
@@ -414,7 +420,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
                 </span>
             </span>`;
-        voteListEl?.appendChild(btn);
+        
+        // Insert before the "add new" button to keep it at the end
+        const addNewBtn = voteListEl?.querySelector('#openAddOption');
+        if (addNewBtn) {
+            voteListEl.insertBefore(btn, addNewBtn);
+        } else {
+            voteListEl?.appendChild(btn);
+        }
         renderVotes();
         sendVoteToSheet(name, 0, 0, 'new-option');
         closeModal();
@@ -422,16 +435,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize counts and selected state (load from Sheet first)
     initCountsFromSheet().finally(() => {
-    const selected = getSelectedKey();
-    if (selected) {
-        const selBtn = $(`#voteList .vote-item[data-key="${CSS.escape(selected)}"]`);
-        if (selBtn) selBtn.classList.add('selected');
-    }
-});
-});
+        const selected = getSelectedKey();
+        if (selected) {
+            const selBtn = $(`#voteList .vote-item[data-key="${CSS.escape(selected)}"]`);
+            if (selBtn) selBtn.classList.add('selected');
+        }
+    });
 });
 
 async function animateNameToParticles(userName) {
+    const nameParticles = document.getElementById('nameParticles');
+    if (!nameParticles) return;
+    
     nameParticles.textContent = userName;
     nameParticles.style.opacity = '1';
     nameParticles.style.transform = 'translate(-50%, -50%) scale(1)';
