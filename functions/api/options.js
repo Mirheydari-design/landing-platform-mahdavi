@@ -1,5 +1,5 @@
 // /functions/api/options.js
-// افزودن/خواندن گزینه‌ها (همیشه JSON برمی‌گرداند)
+// افزودن/خواندن گزینه‌ها (همیشه JSON می‌دهد) + ترتیب بر اساس rowid (جدیدترین‌ها در انتها)
 
 function j(body, status = 200, extra = {}) {
   return new Response(JSON.stringify(body), {
@@ -10,8 +10,9 @@ function j(body, status = 200, extra = {}) {
 
 export async function onRequestGet({ env }) {
   try {
+    // نکته‌ی مهم: ORDER BY rowid → درج‌های جدید انتهای لیست
     const { results } = await env.DB
-      .prepare("SELECT option, description FROM options ORDER BY option")
+      .prepare("SELECT option, description FROM options ORDER BY rowid ASC")
       .all();
     return j({ options: results || [] });
   } catch (err) {
@@ -34,7 +35,6 @@ export async function onRequestPost({ env, request }) {
       .bind(name, description)
       .run();
 
-    // بررسی وجود (اگر قبلاً بوده هم OK است)
     const { results } = await env.DB
       .prepare("SELECT option FROM options WHERE option = ?1")
       .bind(name)
