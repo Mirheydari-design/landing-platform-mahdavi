@@ -48,6 +48,86 @@ function handleParallax() {
     d.head.appendChild(styleEl);
 })();
 
+
+// === Google Sheet Bridge ===
+const SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwRPmJtvsr90MrIGuYdR9LvZfVX5jO0_Q2WuM_35cCcsdho8hxkNpJt5lIcmsiLWFbB8g/exec';
+
+function generateAndStoreVisitorId() {
+  const key = 'visitorId';
+  const existing = localStorage.getItem(key);
+  if (existing) return existing;
+  const id = 'v_' + Math.random().toString(36).slice(2, 10);
+  localStorage.setItem(key, id);
+  return id;
+}
+
+async function sendVoteToSheet(option, prevCount, newCount, source = 'vote') {
+  try {
+    const res = await fetch(SHEETS_WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        option,
+        prevCount,
+        newCount,
+        userId: generateAndStoreVisitorId(),
+        source
+      })
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.status !== 'ok') console.warn('Sheets POST failed', json);
+  } catch (err) {
+    console.error('Network error sending vote to sheet:', err);
+  }
+}
+
+async function fetchCountsFromSheet() {
+  try {
+    const res = await fetch(SHEETS_WEBAPP_URL);
+    const json = await res.json();
+    return json.counts || {};
+  } catch (e) {
+    console.warn('Could not fetch counts from sheet', e);
+    return {};
+  }
+}
+
+function applyCountsToUI(counts) {
+  // اگر گزینه‌ای در STATE نبود ولی در شیت هست، دکمه‌اش را بساز
+  Object.keys(counts).forEach(name => {
+    if (!STATE.has(name)) {
+      STATE.set(name, 0);
+      const btn = document.createElement('button');
+      btn.className = 'vote-item';
+      btn.setAttribute('data-key', name);
+      btn.innerHTML = `
+            <div>
+                <div class="item-title">${name}</div>
+                <div class="item-subtitle"></div>
+            </div>
+            <span class="item-meta">
+                <span class="count-badge" data-count>۰</span>
+                <span class="icon-outline" aria-hidden>
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.54 0 3.04.99 3.57 2.36h1.87C14.46 4.99 15.96 4 17.5 4 20 4 22 6 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </span>`;
+      voteListEl?.appendChild(btn);
+    }
+  });
+
+  Object.entries(counts).forEach(([name, cnt]) => {
+    STATE.set(name, Number(cnt) || 0);
+  });
+  renderVotes();
+}
+
+async function initCountsFromSheet() {
+  const counts = await fetchCountsFromSheet();
+  applyCountsToUI(counts);
+}
+// === END Google Sheet Bridge ===
 // Vote functionality
 function vote(button) {
     // Remove voted class from all buttons
@@ -273,6 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
         STATE.set(key, (STATE.get(key) || 0) + 1);
         setSelectedKey(key);
         renderVotes();
+        const prevCountBefore = (STATE.get(key) || 1) - 1; const newCountAfter = STATE.get(key);
+        sendVoteToSheet(key, prevCountBefore, newCountAfter, 'vote');
         // Micro feedback + ensure selected class toggled only one
         target.style.transform = 'translateY(-3px) scale(1.02)';
         setTimeout(() => { target.style.transform = ''; }, 160);
@@ -316,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const parts = tagline.split(/\s+/).slice(0, 5);
             tagline = parts.join(' ');
         }
-        // Add new option to DOM at end (همیشه در انتهای لیست قرار می‌گیرد)
+        // Add new option to DOM at end
         if (!STATE.has(name)) STATE.set(name, 0);
         const btn = d.createElement('button');
         btn.className = 'vote-item';
@@ -332,25 +414,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1 8.64l-.1.1-.1-.1C10.14 6.82 7.1 7.5 6.5 9.88c-.38 1.53.44 3.07 1.69 4.32C9.68 15.7 12 17 12 17s2.32-1.3 3.81-2.8c1.25-1.25 2.07-2.79 1.69-4.32-.6-2.38-3.64-3.06-5.4-1.24z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
                 </span>
             </span>`;
-        
-        // اطمینان از قرارگیری در انتهای لیست - قبل از دکمه "گزینه پیشنهادی جدید"
-        const addNewBtn = voteListEl?.querySelector('#openAddOption');
-        if (addNewBtn) {
-            voteListEl.insertBefore(btn, addNewBtn);
-        } else {
-            voteListEl?.appendChild(btn);
-        }
+        voteListEl?.appendChild(btn);
         renderVotes();
+        sendVoteToSheet(name, 0, 0, 'new-option');
         closeModal();
     });
 
-    // Initialize counts and selected state
-    renderVotes();
+    // Initialize counts and selected state (load from Sheet first)
+    initCountsFromSheet().finally(() => {
     const selected = getSelectedKey();
     if (selected) {
         const selBtn = $(`#voteList .vote-item[data-key="${CSS.escape(selected)}"]`);
         if (selBtn) selBtn.classList.add('selected');
     }
+});
+});
 });
 
 async function animateNameToParticles(userName) {
