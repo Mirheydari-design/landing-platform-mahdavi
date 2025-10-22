@@ -100,29 +100,95 @@
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section id="features" class="features">
+    <!-- Interactive Daily Activities Section -->
+    <section id="daily-activities" class="daily-activities">
         <div class="container">
-            <h2 class="section-title scroll-reveal">چه کارهایی توی این پلتفرم میتونی انجام بدی؟</h2>
+            <h2 class="section-title scroll-reveal">امروز کدوم یکی از کارهات رو میخوای امام زمانی زندگی کنی؟</h2>
             
-            <div class="features-grid">
-                <div class="feature-card scroll-reveal" style="--delay: 0.1s">
-                    <div class="feature-icon">🤖</div>
-                    <h3>چت با هوش مصنوعی</h3>
-                    <p>با یک هوش مصنوعی حرف بزن که زندگی روزمره‌ت رو بهتر میکنه و معرفتت رو زیاد میکنه</p>
-                </div>
+            <div class="activities-grid">
+                <button class="activity-option" data-activity="studying">
+                    <div class="activity-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                        </svg>
+                    </div>
+                    <span>درس خوندنم</span>
+                </button>
                 
-                <div class="feature-card scroll-reveal" style="--delay: 0.2s">
-                    <div class="feature-icon">✨</div>
-                    <h3>کارت‌های زیبای نیت</h3>
-                    <p>نیت‌های ارتقایافته‌ت رو در قالب کارت‌های خفن با تصویر به اشتراک بذار</p>
-                </div>
+                <button class="activity-option" data-activity="family">
+                    <div class="activity-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <span>وقت گذروندن با خانواده ام</span>
+                </button>
                 
-                <div class="feature-card scroll-reveal" style="--delay: 0.3s">
-                    <div class="feature-icon">💬</div>
-                    <h3>کامنت‌گذاری هوشمند</h3>
-                    <p>حتی بات‌های کامنت‌گذار هم هستن که برای افزایش معرفت کمکت میکنن</p>
+                <button class="activity-option" data-activity="waiting">
+                    <div class="activity-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                    </div>
+                    <span>توی صف خرید نون ایستادنم</span>
+                </button>
+                
+                <button class="activity-option" data-activity="boredom">
+                    <div class="activity-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                    </div>
+                    <span>بی حوصلگی ام</span>
+                </button>
+                
+                <button class="activity-option" data-activity="work">
+                    <div class="activity-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <span>کار کردنم</span>
+                </button>
+                
+                <button class="activity-option" data-activity="exercise">
+                    <div class="activity-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6.5 6.5h11v11h-11z"/>
+                            <path d="M6.5 6.5L12 12l5.5-5.5"/>
+                            <path d="M6.5 17.5L12 12l5.5 5.5"/>
+                        </svg>
+                    </div>
+                    <span>ورزش کردنم</span>
+                </button>
+            </div>
+            
+            <!-- Chat Response Area -->
+            <div class="chat-response" id="chatResponse" style="display: none;">
+                <div class="avatar">
+                    <video class="avatar-video" autoplay muted loop playsinline>
+                        <source src="images/ai avatar.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
                 </div>
+                <div class="chat-bubble">
+                    <div class="chat-message" id="chatMessage"></div>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="action-button-container" id="actionButtonContainer" style="display: none;">
+                <button class="action-button" id="actionButton" onclick="window.open('https://mahdaviat.metafa.ir', '_blank')">
+                    چطور بی حوصلگی ام رو بهانه ای برای اتصال به امام زمانم کنم؟
+                </button>
             </div>
         </div>
     </section>
@@ -302,11 +368,57 @@
                 </div>
                 <div class="footer-links">
                     <a href="#hero">خانه</a>
-                    <a href="#features">ویژگی‌ها</a>
+                    <a href="#daily-activities">فعالیت‌ها</a>
                     <a href="#feedback">نظرات</a>
                     <a href="https://313time.featurebase.app/" target="_blank">پیشنهادات</a>
                 </div>
             </div>
+            
+            <!-- Features moved to footer -->
+            <div class="footer-features">
+                <div class="footer-feature">
+                    <div class="footer-feature-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4"/>
+                            <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                            <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                            <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                            <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                        </svg>
+                    </div>
+                    <div class="footer-feature-content">
+                        <h4>چت با هوش مصنوعی</h4>
+                        <p>ارتباط هوشمند با سیستم‌های پیشرفته برای بهبود زندگی روزمره و ارتقای سطح معرفت دینی</p>
+                    </div>
+                </div>
+                
+                <div class="footer-feature">
+                    <div class="footer-feature-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21,15 16,10 5,21"/>
+                        </svg>
+                    </div>
+                    <div class="footer-feature-content">
+                        <h4>کارت‌های زیبای نیت</h4>
+                        <p>انتشار و به‌اشتراک‌گذاری نیت‌های معنوی در قالب کارت‌های گرافیکی جذاب و تأثیرگذار</p>
+                    </div>
+                </div>
+                
+                <div class="footer-feature">
+                    <div class="footer-feature-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="footer-feature-content">
+                        <h4>کامنت‌گذاری هوشمند</h4>
+                        <p>سیستم‌های پیشرفته نظردهی و تعامل که به افزایش آگاهی و معرفت کاربران کمک می‌کنند</p>
+                    </div>
+                </div>
+            </div>
+            
             <div class="footer-bottom">
                 <p>© ۱۴۰۳ پلتفرم مهدوی - تمام حقوق محفوظ است</p>
             </div>

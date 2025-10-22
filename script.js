@@ -138,6 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(revelationSection);
     }
 
+    // Initialize daily activities
+    initDailyActivities();
+
     // نمایش فوری همه کامپوننت‌ها
     const allReveals = document.querySelectorAll('.scroll-reveal');
     allReveals.forEach(reveal => reveal.classList.add('revealed'));
@@ -429,6 +432,101 @@ document.addEventListener('DOMContentLoaded', async function initVoting(){
     render({ error: err });
   }
 });
+
+// ===== Daily Activities Interactive Section =====
+const activityMessages = {
+  studying: "درس خوندنت رو بهانه‌ای کن برای یادگیری بیشتر درباره امام زمان. هر صفحه‌ای که می‌خونی، یه قدم نزدیک‌تر به شناخت امامت می‌ری رفیق.",
+  family: "وقت گذروندن با خانواده‌ات رو بهانه‌ای کن برای یادآوری ارزش خانواده امام زمان. اون هم خانواده‌ای داره که منتظرشن.",
+  waiting: "ایستادن توی صف رو بهانه‌ای کن برای صبر امام زمانی. امام زمان هم سال‌هاست که منتظر ظهورشه، تو هم صبر کن.",
+  boredom: "بی‌حوصلگی‌ات رو بهونه‌ای کن برای یک سلام کوتاه به امام. گاهی قوت در همین سلام‌های خسته است رفیق.",
+  work: "کار کردنت رو بهانه‌ای کن برای خدمت به جامعه امام زمانی. هر کاری که می‌کنی، برای آماده کردن دنیا برای ظهور باشه.",
+  exercise: "ورزش کردنت رو بهانه‌ای کن برای قوی شدن جسم و روح. امام زمان به یاران قوی و آماده نیاز داره."
+};
+
+function initDailyActivities() {
+  const activityOptions = document.querySelectorAll('.activity-option');
+  const chatResponse = document.getElementById('chatResponse');
+  const chatMessage = document.getElementById('chatMessage');
+  const actionButtonContainer = document.getElementById('actionButtonContainer');
+  
+  let isTyping = false; // Flag to prevent multiple selections during typing
+  
+  activityOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      // Prevent clicking if typing is in progress
+      if (isTyping) return;
+      
+      // Remove previous selection
+      activityOptions.forEach(opt => opt.classList.remove('selected'));
+      
+      // Add selection to clicked option
+      option.classList.add('selected');
+      
+      const activity = option.dataset.activity;
+      const message = activityMessages[activity];
+      
+      // Set typing flag to true
+      isTyping = true;
+      
+      // Disable all activity options during typing
+      activityOptions.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        opt.style.opacity = '0.5';
+        opt.classList.add('disabled');
+      });
+      
+      // Show chat response with delay
+      setTimeout(() => {
+        chatResponse.style.display = 'flex';
+        chatResponse.classList.add('visible');
+        
+        // Type the message slowly
+        typeMessageSlowly(chatMessage, message).then(() => {
+          // Re-enable activity options after typing is complete
+          isTyping = false;
+          activityOptions.forEach(opt => {
+            opt.style.pointerEvents = 'auto';
+            opt.style.opacity = '1';
+            opt.classList.remove('disabled');
+          });
+          
+          // Show action button after typing is complete
+          setTimeout(() => {
+            actionButtonContainer.style.display = 'flex';
+            actionButtonContainer.classList.add('visible');
+          }, 500); // Small delay after typing completes
+        });
+        
+        // Remove the old setTimeout for action button
+        
+      }, 500);
+    });
+  });
+}
+
+async function typeMessageSlowly(element, text) {
+  return new Promise(async (resolve) => {
+    element.innerHTML = '';
+    const wrapper = document.createElement('span');
+    element.appendChild(wrapper);
+    
+    for (let i = 0; i < text.length; i++) {
+      const typedText = text.substring(0, i);
+      const nextChar = text.charAt(i);
+      wrapper.innerHTML = `<span class="typed-chars">${typedText}</span><span class="next-char">${nextChar}</span>`;
+      const nextCharSpan = wrapper.querySelector('.next-char');
+      if (nextCharSpan) { 
+        void nextCharSpan.offsetWidth; 
+        nextCharSpan.classList.add('visible'); 
+      }
+      let typingSpeed = 40 + Math.random() * 20;
+      if (['،', '؟', '.', '!'].includes(nextChar)) typingSpeed += 300;
+      await new Promise(resolve => setTimeout(resolve, typingSpeed));
+    }
+    element.textContent = text;
+    resolve(); // Resolve the promise when typing is complete
+  });
+}
 
 // ====== Effects / AI (unchanged logic) ======
 async function animateNameToParticles(userName) {
