@@ -1545,3 +1545,224 @@ body::-webkit-scrollbar {
         margin-bottom: 1.2rem;
     }
 }
+
+/* -------------------------------------------------------------------------
+   Roadmap/timeline styles (updated to match the provided mockups precisely)
+   The timeline displays five steps. On larger viewports (>= 768px) it is a
+   horizontal roadmap with a gradient progress line and evenly spaced steps.
+   On smaller viewports (< 768px) it switches to a vertical layout with the
+   progress line running vertically down the center. Completed steps use
+   filled markers with check icons, the current step uses a larger marker
+   and shows a "مرحله فعلی" badge, and upcoming steps use outlined markers.
+   The final step has a dashed continuation line. All text supports RTL
+   layouts. The entire section uses a galaxy/star background image.
+*/
+.roadmap-section {
+    /* Galaxy backdrop blended with a dark overlay for readability */
+    padding: 80px 20px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    background:
+        linear-gradient(rgba(31, 36, 48, 0.9), rgba(31, 36, 48, 0.9)),
+        url('images/thumb-1920-846641.jpg');
+    background-size: cover;
+    background-position: center;
+}
+.roadmap-header h2 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    color: #fff;
+}
+/* hide any stray header badges */
+.roadmap-status-badge {
+    display: none !important;
+}
+.roadmap {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 2;
+}
+/* horizontal progress line */
+.roadmap::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    /* gradient runs from right (stage 1) to left (stage 5) in RTL */
+    background: linear-gradient(to left, #ff8a65 0%, #ffb74d 100%);
+    z-index: 1;
+    transform: translateY(-50%);
+}
+/* step base */
+.roadmap .step {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 0 5px;
+    z-index: 2;
+}
+
+/* align completed and upcoming steps to the progress line */
+.roadmap .step.completed,
+.roadmap .step.upcoming {
+    transform: translateY(33px);
+}
+/* meta info holds stage number and optional badge */
+.roadmap .step-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+    min-height: 1rem;
+}
+/* stage number */
+.roadmap .step-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    line-height: 1;
+    white-space: nowrap;
+}
+/* badge, hidden by default */
+.roadmap .step-badge {
+    display: none;
+    background: #007aff;
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 8px;
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    transform: translateY(-8px);
+}
+/* only show badge for the current step */
+.roadmap .step.current .step-badge {
+    display: inline-block;
+}
+/* marker for steps */
+.roadmap .step-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 3px solid #1f2430;
+    background: linear-gradient(135deg, #ff8a65, #ffb74d);
+    width: 20px;
+    height: 20px;
+}
+/* completed steps show a check icon */
+.roadmap .step.completed .step-marker span.icon {
+    color: #fff;
+    font-size: 0.65rem;
+    line-height: 1;
+}
+/* upcoming steps: outlined marker */
+.roadmap .step.upcoming .step-marker {
+    background: #1f2430;
+    border: 2px solid #ff8a65;
+}
+/* current step marker is larger and glows */
+.roadmap .step.current .step-marker {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #1f2430;
+    background: linear-gradient(135deg, #ff8a65, #ffb74d);
+    box-shadow: 0 0 12px rgba(255,107,107,0.6);
+}
+/* titles under the line */
+.roadmap .step-title {
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.4;
+    max-width: 140px;
+}
+.roadmap .step.current .step-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+/* dashed continuation after final step on desktop */
+.roadmap .step.upcoming.last::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    width: 64px;
+    border-top: 2px dashed #ff8a65;
+    transform: translateY(-17%);
+}
+/* vertical version for small screens */
+@media (max-width: 768px) {
+    .roadmap {
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    .roadmap::before {
+        top: 0;
+        bottom: 0;
+        right: 50%;
+        left: auto;
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(to bottom, #ff8a65 0%, #ffb74d 100%);
+        transform: translateX(50%);
+    }
+    .roadmap .step {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 3rem;
+        text-align: right;
+    }
+    .roadmap .step-meta {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        margin: 0;
+    }
+    .roadmap .step-label {
+        margin: 0 0 0 0.4rem;
+    }
+    .roadmap .step-badge {
+        margin: 0 0 0 0.6rem;
+        font-size: 0.65rem;
+        transform: translateY(2px);
+    }
+    .roadmap .step-marker {
+        margin: 0 0.6rem;
+    }
+    .roadmap .step-title {
+        margin: 0;
+        font-size: 0.9rem;
+        flex: 1;
+    }
+    .roadmap .step.current .step-title {
+        font-size: 1rem;
+    }
+    /* dashed continuation after final step on mobile */
+    .roadmap .step.upcoming.last::after {
+        display: none;
+    }
+
+    /* shift non-current steps slightly to the left of the center line */
+    .roadmap .step.completed,
+    .roadmap .step.upcoming {
+        transform: translateX(-48px);
+    }
+}
