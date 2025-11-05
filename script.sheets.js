@@ -499,7 +499,7 @@ function createNameParticles(count) {
 }
 
 async function generateMysticalContent(userName) {
-    const MODEL_NAME = "gemini-2.0-flash"; // Using a known valid model
+    const MODEL_NAME = "gemini-2.5-flash"; // Using a known valid model
     
     const prompt = `تو یک نویسنده مسلمان هستی که درباره معنی اسم کوچک کاربر مینویسی.
     هشدار: اگر اسم کاربر نام غیر انسان (مثل اسم حیوانات مانند گرگ، جیرجیرک ها، درخت پیر و ...) یا غیرطبیعی (مثل اسم اشیاء مانند قایق، سیب زمینی، دمپایی، کی بورد و ...) یا هر گونه نام غیر متعارف بود و به هر نحوی قصد شوخی داشت، حتما "is_human": false شود و هشدار بده که اسم کوچک واقعی خودش را بنویسد. اما اگر اسم طبیعی انسان بود (مثل علی، آرمان، پارمیدا و ...) پس:
