@@ -318,10 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Voting logic
     const initialOptions = [
-        { key: 'نور هدایت', tagline: 'راهی روشن برای دل‌ها', votes: 0 },
-        { key: 'راه انتظار', tagline: 'صبر فعال برای فردای بهتر', votes: 0 },
-        { key: 'همراه مهدی', tagline: 'گامی کنار یاران خوبی', votes: 0 },
-        { key: 'نسیم ظهور', tagline: 'طراوت امید در زندگی', votes: 0 },
     ];
 
     const voteListEl = $('#voteList');
