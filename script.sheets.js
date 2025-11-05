@@ -604,7 +604,7 @@ async function revealMysticalMessage(content) {
             }
         
             // Add click handler to final button
-            finalCta.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app'; };
+            finalCta.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app/chat'; };
         }, 500); // Reduced delay for a snappier feel
     }, 1000); // Much earlier start - right when particles begin
 }

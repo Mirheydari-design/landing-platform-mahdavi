@@ -435,12 +435,30 @@ document.addEventListener('DOMContentLoaded', async function initVoting(){
 
 // ===== Daily Activities Interactive Section =====
 const activityMessages = {
-  studying: "درس خوندنت رو بهانه‌ای کن برای یادگیری بیشتر درباره امام زمان. هر صفحه‌ای که می‌خونی، یه قدم نزدیک‌تر به شناخت امامت می‌ری رفیق.",
-  family: "وقت گذروندن با خانواده‌ات رو بهانه‌ای کن برای یادآوری ارزش خانواده امام زمان. اون هم خانواده‌ای داره که منتظرشن.",
-  waiting: "ایستادن توی صف رو بهانه‌ای کن برای صبر امام زمانی. امام زمان هم سال‌هاست که منتظر ظهورشه، تو هم صبر کن.",
-  boredom: "بی‌حوصلگی‌ات رو بهونه‌ای کن برای یک سلام کوتاه به امام. گاهی قوت در همین سلام‌های خسته است رفیق.",
-  work: "کار کردنت رو بهانه‌ای کن برای خدمت به جامعه امام زمانی. هر کاری که می‌کنی، برای آماده کردن دنیا برای ظهور باشه.",
-  exercise: "ورزش کردنت رو بهانه‌ای کن برای قوی شدن جسم و روح. امام زمان به یاران قوی و آماده نیاز داره."
+  studying: {
+    text: "فکر کن هر کلمه‌ای که یاد می‌گیری، یه آجره برای ساختن دنیایی که منتظرشیم. جامعه‌ی آرمانی امام به متخصص‌های باعلم و دغدغه‌مند مثل تو نیاز داره. نتیجه‌اش؟ دیگه درس خوندن فقط برای نمره نیست، تبدیل می‌شه به یه «مأموریت» شیرین و هدفمند زندگی؛ اونوقت چون هدف داری دیگه میدونی روی چی سرمایه گذاری کنی چه درسی رو بخونی که امام الان لازم داره و چه درسی رو نخونی. با خیال راحت از گزینه های اضافی عبور میکنی.",
+    button: "چطور درسم رو به یه مأموریت امام زمانی تبدیل کنم؟"
+  },
+  family: {
+    text: "خانواده، سلول اصلی جامعه‌ی امام زمانه. فکر کن که همین الان داری یه «خانواده‌ی مهدوی» کوچیک رو گرم و محکم نگه می‌داری. نتیجه‌اش؟ این محبت ساده، می‌شه یه سرمایه‌گذاری بزرگ برای آینده. یه تمرین همدلی برای بودن در کنار امام زمان که از «پدر» هم دلسوزتر و مهربانتر هستند برای شیعیان.",
+    button: "چطور خانواده‌ام رو به این جامعه‌ی بزرگتر وصل کنم؟"
+  },
+  waiting: {
+    text: "به آدم‌های کنارت نگاه کن. خیلی‌هاشون مثل خودت، دل‌شون برای امام می‌تپه. داری برای خانواده‌ات (که اون‌ها هم محب حضرتن) چیزی میخری. تو در میان «محبان» امامی. نتیجه‌اش؟ دیگه این انتظار کلافه‌ات نمی‌کنه. حس می‌کنی توی صفِ خودی‌ها ایستادی و همین ایستادن هم با عشق می‌گذره.",
+    button: "چطور این لحظه‌های هدر رفته رو معنادار کنم؟"
+  },
+  boredom: {
+    text: "همین که حس می‌کنی یه چیزی کمه، بهترین فرصته. این خلأ رو با یه «سلام» کوتاه به امام پر کن. ایشون دلسوزتر از پدر، منتظر همین ارتباط‌های کوچیک ما هستن. نتیجه‌اش؟ اون بی‌حوصلگی تبدیل می‌شه به یه «گفتگوی» آرام‌بخش و دلی. می‌بینی که چطور حالت رو عوض می‌کنه. مخصوصا اگه قولی بخوای به امام بدی...",
+    button: "چطور با یه سلام ساده، حالم رو خوب کنم؟"
+  },
+  work: {
+    text: "فکر کن هر کاری که درست و دقیق انجام می‌دی، یه گره از کار این دنیا باز می‌کنه. داری بخشی از دنیایی رو می‌سازی که قراره به دست صاحبش برسه. نتیجه‌اش؟ کارت دیگه فقط برای درآمد نیست؛ می‌شه یه «خدمت» و یه «امانت‌داری» بزرگ. با این نگاه، خستگیش هم شیرین می‌شه و اصلا خسته نمیشی.",
+    button: "چطور کارم رو به  یه کار امام زمانی تبدیل کنم؟"
+  },
+  exercise: {
+    text: "بدن تو، «ابزار» تو برای خدمته. فکر کن داری این ابزار رو قوی و آماده نگه می‌داری تا روزی که لازم شد، بتونی بهترین خدمت رو به جامعه‌ی امام زمانت بکنی. نتیجه‌اش؟ این ورزش دیگه یه کار شخصی نیست؛ می‌شه «آمادگی» و مراقبت از امانتی که قراره به کار بیاد. حالا دیگه خستگی رو اصلا حس میکنی؟",
+    button: "چطور ورزشم رو یه جور «آمادگی» ببینم؟"
+  }
 };
 
 function initDailyActivities() {
@@ -448,6 +466,7 @@ function initDailyActivities() {
   const chatResponse = document.getElementById('chatResponse');
   const chatMessage = document.getElementById('chatMessage');
   const actionButtonContainer = document.getElementById('actionButtonContainer');
+  const actionButton = document.getElementById('actionButton');
   
   let isTyping = false; // Flag to prevent multiple selections during typing
   
@@ -463,7 +482,7 @@ function initDailyActivities() {
       option.classList.add('selected');
       
       const activity = option.dataset.activity;
-      const message = activityMessages[activity];
+      const content = activityMessages[activity];
       
       // Set typing flag to true
       isTyping = true;
@@ -481,7 +500,7 @@ function initDailyActivities() {
         chatResponse.classList.add('visible');
         
         // Type the message slowly
-        typeMessageSlowly(chatMessage, message).then(() => {
+        typeMessageSlowly(chatMessage, content?.text || '').then(() => {
           // Re-enable activity options after typing is complete
           isTyping = false;
           activityOptions.forEach(opt => {
@@ -494,6 +513,10 @@ function initDailyActivities() {
           setTimeout(() => {
             actionButtonContainer.style.display = 'flex';
             actionButtonContainer.classList.add('visible');
+            if (actionButton) {
+              actionButton.textContent = content?.button || actionButton.textContent;
+              actionButton.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app/chat'; };
+            }
           }, 500); // Small delay after typing completes
         });
         
@@ -621,7 +644,7 @@ async function revealMysticalMessage(content) {
                 finalCtaSubtext.style.opacity = '1';
                 await typeTextSlowly(finalCtaSubtext, 'زندگی روزمره امام زمانی رو تجربه کن!');
             }
-            finalCta.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app'; };
+            finalCta.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app/chat'; };
         }, 500);
     }, 1000);
 }
