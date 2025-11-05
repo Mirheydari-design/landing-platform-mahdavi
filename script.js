@@ -564,29 +564,25 @@ function createNameParticles(count) {
 }
 
 async function generateMysticalContent(userName) {
-    const API_KEYS = [
-        'AIzaSyC-QxOrjb9L_XS9a47لینک-کلید-اول',
-        'AIzaSyDNYmQr_OnNMInzS69لینک-کلید-دوم',
-        'AIzaSyBwgJ0edSD5DWFZoDaلینک-کلید-سوم',
-        'AIzaSyC4uWHQuMWkyuLbgzrلینک-کلید-چهارم'
-    ];
     const MODEL_NAME = "gemini-2.0-flash";
     const prompt = /* همان متن طولانی فعلی شما */ ``;
 
-    const requestBody = { contents:[{ parts:[{ text: prompt }]}], generationConfig:{ responseMimeType:"application/json" } };
-    for (const key of API_KEYS) {
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${key}`;
-        try {
-            const response = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(requestBody) });
-            if (!response.ok) { const t = await response.text(); console.error('API Error:', response.status, t); if (response.status>=400 && response.status<500) continue; continue; }
-            const data = await response.json();
-            if (data.candidates && data.candidates[0]?.content?.parts?.length) {
-                const jsonText = data.candidates[0].content.parts[0].text;
-                return JSON.parse(jsonText);
-            } else { throw new Error("Invalid response structure from Gemini API"); }
-        } catch (error) { console.error('Fetch failed:', error); }
+    const body = { prompt, model: MODEL_NAME, generationConfig: { responseMimeType: "application/json" } };
+    const response = await fetch(`${location.origin}/api/gemini`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+        const t = await response.text();
+        throw new Error(`Gemini proxy error ${response.status}: ${t}`);
     }
-    throw new Error("All Gemini API keys failed.");
+    const data = await response.json();
+    if (data.candidates && data.candidates[0]?.content?.parts?.length) {
+        const jsonText = data.candidates[0].content.parts[0].text;
+        return JSON.parse(jsonText);
+    }
+    throw new Error("Invalid response structure from Gemini API");
 }
 
 async function revealMysticalMessage(content) {

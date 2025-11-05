@@ -499,13 +499,7 @@ function createNameParticles(count) {
 }
 
 async function generateMysticalContent(userName) {
-    const API_KEYS = [
-        'AIzaSyC-QxOrjb9L_XS9a47l6H3eHiAAJ6Xus2c',
-        'AIzaSyDNYmQr_OnNMInzS69vKOxtBtPd_CxFYdM',
-        'AIzaSyBwgJ0edSD5DWFZoDa9xyLifTH_gUNoHxs',
-        'AIzaSyC4uWHQuMWkyuLbgzrepmvbu9-olNVCiVI'
-    ];
-    const MODEL_NAME = "gemini-2.0-flash"; // Using a known valid model
+    const MODEL_NAME = "gemini-2.5-pro"; // Using a known valid model
     
     const prompt = `تو یک نویسنده مسلمان هستی که درباره معنی اسم کوچک کاربر مینویسی.
     هشدار: اگر اسم کاربر نام غیر انسان (مثل اسم حیوانات مانند گرگ، جیرجیرک ها، درخت پیر و ...) یا غیرطبیعی (مثل اسم اشیاء مانند قایق، سیب زمینی، دمپایی، کی بورد و ...) یا هر گونه نام غیر متعارف بود و به هر نحوی قصد شوخی داشت، حتما "is_human": false شود و هشدار بده که اسم کوچک واقعی خودش را بنویسد. اما اگر اسم طبیعی انسان بود (مثل علی، آرمان، پارمیدا و ...) پس:
@@ -549,54 +543,22 @@ async function generateMysticalContent(userName) {
 
 فقط JSON با کلیدهای main_text و button_text برگردانید.`;
 
-    const requestBody = {
-        "contents": [{
-            "parts": [{ "text": prompt }]
-        }],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-        }
-    };
-
-    for (const key of API_KEYS) {
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${key}`;
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody),
-            });
-
-            if (!response.ok) {
-                const errorBody = await response.text();
-                console.error(`API Error with key ${key.substring(0, 8)}...:`, response.status, errorBody);
-                // If it's a client error (like invalid API key), try the next one.
-                if (response.status >= 400 && response.status < 500) {
-                    continue; 
-                }
-                // For server errors, we might want to stop or handle differently, but for now we'll just try the next key.
-                continue;
-            }
-
-            const data = await response.json();
-            
-            if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts.length > 0) {
-                const jsonText = data.candidates[0].content.parts[0].text;
-                return JSON.parse(jsonText);
-            } else {
-                 throw new Error("Invalid response structure from Gemini API");
-            }
-
-        } catch (error) {
-            console.error(`Fetch failed for key ${key.substring(0, 8)}...:`, error);
-            // The loop will automatically continue to the next key.
-        }
+    const body = { prompt, model: MODEL_NAME, generationConfig: { responseMimeType: "application/json" } };
+    const response = await fetch(`${location.origin}/api/gemini`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+        const t = await response.text();
+        throw new Error(`Gemini proxy error ${response.status}: ${t}`);
     }
-
-    // If all keys fail, throw an error to be caught by the calling function.
-    throw new Error("All Gemini API keys failed.");
+    const data = await response.json();
+    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts.length > 0) {
+        const jsonText = data.candidates[0].content.parts[0].text;
+        return JSON.parse(jsonText);
+    }
+    throw new Error("Invalid response structure from Gemini API");
 }
 
 async function revealMysticalMessage(content) {
