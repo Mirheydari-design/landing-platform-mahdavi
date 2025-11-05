@@ -530,6 +530,8 @@ async function typeMessageSlowly(element, text) {
 
 // ====== Effects / AI (unchanged logic) ======
 async function animateNameToParticles(userName) {
+    const nameParticles = d.getElementById('nameParticles');
+    if (!nameParticles) return;
     nameParticles.textContent = userName;
     nameParticles.style.opacity = '1';
     nameParticles.style.transform = 'translate(-50%, -50%) scale(1)';
@@ -564,8 +566,20 @@ function createNameParticles(count) {
 }
 
 async function generateMysticalContent(userName) {
-    const MODEL_NAME = "gemini-2.0-flash";
-    const prompt = /* همان متن طولانی فعلی شما */ ``;
+    const MODEL_NAME = "gemini-2.5-pro";
+    const prompt = `تو یک نویسنده مسلمان هستی که درباره معنی اسم کوچک کاربر مینویسی.
+    هشدار: اگر اسم کاربر نام غیر انسان یا غیرطبیعی بود "is_human": false شود و هشدار بده که اسم کوچک واقعی خودش را بنویسد. اگر اسم طبیعی انسان بود:
+    "is_human": true
+
+    تحلیل نام کن و نام ${userName} عزیز را تحلیل کرده و یک استعداد یا ویژگی کلیدی و مثبت مرتبط با آن را شناسایی کن.
+    لحن: صمیمی، جوانانه و در شأن امام زمان.
+    خروجی فقط یک JSON معتبر شامل دو کلید باشد: main_text و button_text.
+    نمونه خروجی معتبر:
+    {
+      "is_human": true,
+      "main_text": "...",
+      "button_text": "..."
+    }`;
 
     const body = { prompt, model: MODEL_NAME, generationConfig: { responseMimeType: "application/json" } };
     const response = await fetch(`${location.origin}/api/gemini`, {
@@ -607,10 +621,7 @@ async function revealMysticalMessage(content) {
                 finalCtaSubtext.style.opacity = '1';
                 await typeTextSlowly(finalCtaSubtext, 'زندگی روزمره امام زمانی رو تجربه کن!');
             }
-            finalCta.onclick = () => {
-                const nextSection = d.getElementById('feedback');
-                if (nextSection) nextSection.scrollIntoView({ behavior: 'smooth' });
-            };
+            finalCta.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app'; };
         }, 500);
     }, 1000);
 }

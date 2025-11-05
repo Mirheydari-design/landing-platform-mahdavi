@@ -604,13 +604,7 @@ async function revealMysticalMessage(content) {
             }
         
             // Add click handler to final button
-            finalCta.onclick = () => {
-                // Redirect to main platform or next section
-                const nextSection = document.getElementById('feedback');
-                if (nextSection) {
-                    nextSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            };
+            finalCta.onclick = () => { window.location.href = 'http://mahdaviat.metafa.ir/app'; };
         }, 500); // Reduced delay for a snappier feel
     }, 1000); // Much earlier start - right when particles begin
 }

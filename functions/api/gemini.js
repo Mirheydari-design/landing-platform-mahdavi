@@ -1,6 +1,6 @@
 export async function onRequestPost({ request, env }) {
   try {
-    const { prompt, model = "gemini-2.0-flash", generationConfig } = await request.json();
+    const { prompt, model = "gemini-2.5-pro", generationConfig } = await request.json();
 
     if (!prompt || typeof prompt !== "string") {
       return new Response(JSON.stringify({ error: "Missing or invalid 'prompt'" }), {
