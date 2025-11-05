@@ -566,7 +566,7 @@ function createNameParticles(count) {
 }
 
 async function generateMysticalContent(userName) {
-    const MODEL_NAME = "gemini-2.5-pro";
+    const MODEL_NAME = "gemini-2.0-flash";
     const prompt = `تو یک نویسنده مسلمان هستی که درباره معنی اسم کوچک کاربر مینویسی.
     هشدار: اگر اسم کاربر نام غیر انسان یا غیرطبیعی بود "is_human": false شود و هشدار بده که اسم کوچک واقعی خودش را بنویسد. اگر اسم طبیعی انسان بود:
     "is_human": true
