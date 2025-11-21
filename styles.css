@@ -252,15 +252,15 @@ body::-webkit-scrollbar {
 }
 
 .cta-primary {
-    background: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    color: var(--primary-color);
+    color: #ffffff;
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 8px 32px rgba(255, 107, 53, 0.4),
         0 0 0 1px rgba(255, 255, 255, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     font-family: 'Vazirmatn', sans-serif;
     z-index: 20;
 }
@@ -268,11 +268,11 @@ body::-webkit-scrollbar {
 .cta-primary:hover {
     transform: translateY(-4px) scale(1.05);
     box-shadow: 
-        0 12px 40px rgba(0, 0, 0, 0.15),
+        0 12px 40px rgba(255, 107, 53, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, #FF7F50 0%, #FF9F6B 100%);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 .cta-secondary {
